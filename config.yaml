@@ -1,0 +1,81 @@
+machine:
+  name: "Boiler System"
+
+nodes:
+  "ns=2;i=2":
+    unit: "°C"
+    component: "Boiler"
+    description: "Boiler temperature"
+  "ns=2;i=3":
+    unit: "bar"
+    component: "Boiler"
+    description: "Boiler pressure"
+  "ns=2;i=4":
+    unit: "RPM"
+    component: "Motor"
+    description: "Motor speed"
+  "ns=2;i=5":
+    unit: "A"
+    component: "Motor"
+    description: "Motor current"
+  "ns=2;i=6":
+    unit: "mm/s"
+    component: "Motor"
+    description: "Vibration"
+  "ns=2;i=7":
+    unit: ""
+    component: "Machine"
+    description: "Machine status"
+
+engines:
+  state:
+    thresholds:
+      running: 1000
+      idle: 100
+  
+  alarm:
+    thresholds:
+      Temperature:
+        high: 85.0
+        low: 5.0
+      Pressure:
+        high: 8.0
+        low: 0.5
+      MotorSpeed:
+        high: 2000.0
+        low: 0.0
+      MotorCurrent:
+        high: 10.0
+        low: 0.0
+      Vibration:
+        high: 1.0
+        low: 0.0
+  
+  anomaly:
+    thresholds:
+      Temperature:
+        normal_min: 10
+        normal_max: 80
+      Pressure:
+        normal_min: 0.5
+        normal_max: 5.0
+      MotorSpeed:
+        normal_min: 1000
+        normal_max: 2000
+      MotorCurrent:
+        normal_min: 2.0
+        normal_max: 8.0
+      Vibration:
+        normal_min: 0.0
+        normal_max: 0.5
+  
+  health:
+    scoring:
+      critical_alarm: -30
+      warning_alarm: -15
+      anomaly: -10
+      degraded_quality: -5
+    thresholds:
+      critical: 40
+      warning: 70
+      normal: 85

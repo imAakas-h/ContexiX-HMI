@@ -1,0 +1,211 @@
+================================================================================
+MACHINE OPERATIONAL NARRATIVE REPORT
+================================================================================
+
+
+
+
+During the monitored period, the machine was found to be experiencing challenges that require attention, with a health score of 32.0/100. The system is currently in a running state and has been operating in this state for approximately 0 seconds.
+
+SENSOR READINGS & OBSERVATIONS
+--------------------------------------------------------------------------------
+The machine's sensor array reveals the following operational picture:
+
+
+• Temperature is at 10.00Â°C, currently showing downward movement
+
+
+• Pressure is at 1.03bar, currently showing downward movement
+
+
+• MotorSpeed is at 1468.60RPM, currently showing downward movement
+
+
+• MotorCurrent is at 5.78A, currently holding steady
+
+
+• Vibration is at 0.52mm/s, currently showing downward movement
+
+
+• MachineStatus is at RUNNING, currently displaying
+
+
+
+OPERATIONAL HEALTH ASSESSMENT
+--------------------------------------------------------------------------------
+The machine's health profile is determined by the following factors:
+
+  • 6 warning alarm(s)
+
+  • 4 anomaly/ies detected
+
+
+
+
+ALERTS & ANOMALIES DETECTED
+--------------------------------------------------------------------------------
+During this observation window, 6 alarm(s) were triggered:
+
+
+
+
+Alarm #1 [MEDIUM Severity]:
+  Time: 2026-09-10T19:14:26.032322+00:00
+  Issue: Vibration reached 0.814 (threshold: 0.8)
+  Details: Vibration exceeded threshold (0.8)
+
+
+
+
+Alarm #2 [MEDIUM Severity]:
+  Time: 2026-09-10T19:13:42.538384+00:00
+  Issue: MotorCurrent reached 4.37 (threshold: 4.5)
+  Details: MotorCurrent fallen below threshold (4.5)
+
+
+
+
+Alarm #3 [MEDIUM Severity]:
+  Time: 2026-09-10T19:14:39.238468+00:00
+  Issue: Temperature reached 10.0 (threshold: 15.0)
+  Details: Temperature fallen below threshold (15.0)
+
+
+
+
+Alarm #4 [MEDIUM Severity]:
+  Time: 2026-09-10T19:13:37.470740+00:00
+  Issue: Pressure reached 0.783 (threshold: 0.8)
+  Details: Pressure fallen below threshold (0.8)
+
+
+
+
+Alarm #5 [MEDIUM Severity]:
+  Time: 2026-09-10T19:13:38.484340+00:00
+  Issue: Temperature reached 25.27 (threshold: 25.0)
+  Details: Temperature exceeded threshold (25.0)
+
+
+
+
+Alarm #6 [MEDIUM Severity]:
+  Time: 2026-09-10T19:14:36.185982+00:00
+  Issue: MotorCurrent reached 6.05 (threshold: 6.0)
+  Details: MotorCurrent exceeded threshold (6.0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TREND ANALYSIS
+--------------------------------------------------------------------------------
+Over the observation period, the following trends were observed:
+
+
+  • Temperature is consistently falling
+
+
+  • Pressure is consistently falling
+
+
+  • MotorSpeed is consistently falling
+
+
+  • MotorCurrent is remaining stable
+
+
+  • Vibration is consistently falling
+
+
+
+STATISTICAL PERFORMANCE SUMMARY
+--------------------------------------------------------------------------------
+
+Temperature:
+  Range: 10.0 to 25.28
+  Average: 19.79
+
+Pressure:
+  Range: 0.752 to 1.248
+  Average: 1.01
+
+MotorSpeed:
+  Range: 1447.0 to 1554.3
+  Average: 1503.47
+
+MotorCurrent:
+  Range: 3.93 to 6.07
+  Average: 5.00
+
+Vibration:
+  Range: 0.517 to 0.847
+  Average: 0.72
+
+
+
+UNUSUAL PATTERNS IDENTIFIED
+--------------------------------------------------------------------------------
+The system detected 4 anomalous behavior pattern(s):
+
+  • Temperature: RATE_OF_CHANGE
+    Temperature changed 55.3% in short period
+
+  • Temperature: OUTLIER
+    Temperature is a statistical outlier (z=2.78)
+
+  • Vibration: HIGH_VALUE
+    Vibration is above normal range: 0.519
+
+  • Vibration: OUTLIER
+    Vibration is a statistical outlier (z=2.12)
+
+
+
+RECOMMENDED ACTIONS
+--------------------------------------------------------------------------------
+
+
+• Investigate and resolve the 6 active alarm(s) promptly.
+
+
+
+• Review the 4 anomalous pattern(s) identified and investigate root causes.
+
+
+
+• Schedule maintenance inspection within the next shift to address emerging issues.
+
+
+CONCLUSION
+--------------------------------------------------------------------------------
+
+The machine is functioning but showing signs of degradation. Schedule preventive maintenance soon to maintain optimal performance.
+
+
+================================================================================
+Report Generated: 2026-09-11T05:05:15.513178
+================================================================================

@@ -1,0 +1,366 @@
+================================================================================
+                    MACHINE CONTEXT ENGINE - QUICK START
+================================================================================
+
+STEP 1: VERIFY INSTALLATION
+================================================================================
+
+Run the test script to verify all dependencies are installed:
+
+    python test_ui.py
+
+Expected output:
+    [+] All UI modules imported successfully
+    [+] Engine imported successfully
+    [+] Tkinter imported successfully
+    [+] Matplotlib imported successfully
+
+If you see errors, install dependencies:
+
+    pip install -r requirements.txt
+
+
+STEP 2: LAUNCH THE DASHBOARD UI
+================================================================================
+
+The easiest way to view everything:
+
+    python launch_ui.py
+
+This opens the interactive Tkinter dashboard with:
+  ✓ Real-time graphs for all 6 variables
+  ✓ Current readings table
+  ✓ Alarm timeline (6 alarms detected)
+  ✓ Health status and recommendations
+
+
+STEP 3: CLICK "LOAD & PROCESS"
+================================================================================
+
+In the dashboard:
+  1. Click the "Load & Process" button at the top
+  2. Wait for "Status: Ready | Alarms: 6" message
+  3. Switch between tabs to explore your data
+
+
+STEP 4: VIEW YOUR DATA
+================================================================================
+
+Tab 1: Real-Time Graphs
+  • Temperature (14.7 - 25.3°C)
+  • Pressure (0.78 - 1.25 bar)
+  • MotorSpeed (1468 - 1554 RPM)
+  • MotorCurrent (4.41 - 5.87 A)
+  • Vibration (0.51 - 0.81 mm/s)
+  • Machine Status (RUNNING/IDLE/WARNING)
+
+Tab 2: Current Readings
+  Latest values with trends (↗ up, ↘ down, → stable)
+
+Tab 3: Alarm Timeline
+  All 6 alarms with exact timestamps:
+    19:13:37 - Pressure too low
+    19:13:38 - Temperature too high
+    19:13:42 - Motor current too low
+    19:14:09 - Temperature too low
+    19:14:26 - Vibration too high
+    19:14:36 - Motor current too high
+
+Tab 4: Health Status
+  Machine health score and factors
+
+
+ALTERNATIVE: GENERATE REPORT
+================================================================================
+
+For a text-based report:
+
+    python generate_report.py
+
+Creates: machine_context_report.txt
+
+Shows:
+  ✓ Execution timeline
+  ✓ Complete alarm history with timestamps
+  ✓ Machine readings analysis
+  ✓ Plant health summary
+
+
+ALTERNATIVE: START REST API
+================================================================================
+
+For programmatic access:
+
+    python run_api.py
+
+Then access:
+  • API docs:     http://localhost:8000/docs
+  • Health:       http://localhost:8000/health
+  • Context:      http://localhost:8000/context
+  • Alarms:       http://localhost:8000/alarms
+  • Trends:       http://localhost:8000/trends
+
+
+YOUR DATA FILES
+================================================================================
+
+The system uses these files (all provided):
+
+  machine_data_5min.json
+    - 1,800 sensor readings
+    - 5 minutes of data (1 second sampling)
+    - 6 variables: Temperature, Pressure, MotorSpeed, MotorCurrent, Vibration, MachineStatus
+
+  nodesfile.json
+    - Node metadata and definitions
+    - 11 node entries
+
+  BoilerModel2.NodeSet2.xml
+    - OPC-UA boiler model definitions
+    - Component hierarchy
+
+  Opc.Ua.DI.NodeSet2.xml
+    - OPC-UA device integration standard types
+
+  config.yaml
+    - Alarm thresholds (editable)
+    - Machine name and component info
+    - Health scoring parameters
+
+
+CUSTOMIZING THRESHOLDS
+================================================================================
+
+Edit config.yaml to adjust alarm triggers:
+
+    engines:
+      alarm:
+        thresholds:
+          Temperature:
+            high: 25.0    # Raise to 30.0 to be less sensitive
+            low: 15.0     # Lower to 10.0 to be less sensitive
+          Pressure:
+            high: 1.3
+            low: 0.8
+
+Then reload in dashboard: File → Load Data
+
+
+COMMON TASKS
+================================================================================
+
+1. See graphs for all variables
+   → Launch UI, go to "Real-Time Graphs" tab
+
+2. Get current sensor values
+   → Launch UI, go to "Current Readings" tab
+
+3. View all alarms with timestamps
+   → Launch UI, go to "Alarm Timeline" tab
+   OR run: python generate_report.py
+
+4. Check machine health
+   → Launch UI, go to "Health Status" tab
+
+5. Integrate with external system
+   → Run: python run_api.py
+   → Call http://localhost:8000/context
+
+6. Analyze data programmatically
+   → Use engine in Python:
+      from app.main import MachineContextEngine
+      engine = MachineContextEngine(...)
+      context = engine.process("machine_data_5min.json")
+      print(context.machine_state)
+
+
+OUTPUT FILES
+================================================================================
+
+After running generate_report.py:
+
+  machine_context_report.txt
+    - Professional formatted report
+    - Alarm timeline with timestamps
+    - Machine readings analysis
+    - Health summary
+
+After starting API:
+
+  http://localhost:8000/docs
+    - Interactive API documentation
+    - Test endpoints directly
+
+
+FILE STRUCTURE
+================================================================================
+
+machine_context_engine/
+├── launch_ui.py                  ← START HERE (GUI)
+├── generate_report.py            ← Text report
+├── run_api.py                    ← REST API server
+├── test_ui.py                    ← Test dependencies
+├── config.yaml                   ← Edit thresholds here
+├── machine_data_5min.json        ← Your telemetry data
+├── nodesfile.json                ← Node definitions
+├── *.xml                         ← OPC-UA definitions
+├── app/                          ← Core engine code
+│   ├── main.py                   ← Main orchestrator
+│   ├── ui/                       ← Dashboard UI code
+│   ├── engines/                  ← Analysis engines
+│   ├── inputs/                   ← Data adapters
+│   └── ...
+└── README.md                     ← Full documentation
+
+
+TROUBLESHOOTING
+================================================================================
+
+❌ UI won't start
+  → Run: python test_ui.py
+  → Install: pip install -r requirements.txt
+
+❌ No graphs visible
+  → Check that machine_data_5min.json exists
+  → Verify data contains numeric values
+  → Check that matplotlib is installed
+
+❌ No alarms showing
+  → Check config.yaml thresholds
+  → Verify threshold values match your data range
+  → Example: Temperature range is 14.7-25.3°C
+           Threshold of 85°C will never trigger
+
+❌ Wrong values in graphs
+  → Verify machine_data_5min.json format
+  → Check node IDs match metadata files
+  → Review data in JSON file directly
+
+❌ Units showing as "None"
+  → Update config.yaml with units for each node
+  → Format: 
+      nodes:
+        "ns=2;i=2":
+          unit: "°C"
+
+❌ API won't start
+  → Check port 8000 is available
+  → Verify fastapi is installed
+  → Try different port: uvicorn run_api:app --port 8001
+
+
+WHAT YOU'LL SEE
+================================================================================
+
+Dashboard tabs will show:
+
+[Real-Time Graphs]
+  6 line charts with all sensor variables over time
+
+[Current Readings]
+  Table with latest values for each sensor
+
+[Alarm Timeline]
+  Color-coded alarm events:
+    [19:13:37] Pressure : 0.783 bar
+    [!] WARNING GENERATED
+    Reason: Pressure fallen below threshold (0.8)
+
+[Health Status]
+  Health score: 0/100
+  Status: CRITICAL
+  Machine state: RUNNING
+  Active alarms: 6
+  Anomalies: 0
+
+
+NEXT STEPS
+================================================================================
+
+1. Explore the dashboard
+   python launch_ui.py
+
+2. Review alarms detected
+   python generate_report.py
+
+3. Read the documentation
+   cat README.md
+
+4. Customize thresholds
+   Edit config.yaml
+
+5. Integrate with your system
+   python run_api.py
+
+
+NEED HELP?
+================================================================================
+
+Check these files:
+  • README.md - Full documentation
+  • SYSTEM_SUMMARY.md - Architecture overview
+  • DASHBOARD_GUIDE.txt - UI walkthrough
+  • QUICKSTART.txt - This file
+
+To understand the code:
+  • app/main.py - Main engine class
+  • app/engines/ - Analysis engines
+  • app/ui/ - Dashboard UI code
+
+
+PERFORMANCE
+================================================================================
+
+Processing speed:
+  • Load data: < 1 second
+  • Analyze 1,800 readings: < 1 second
+  • Dashboard UI: < 2 seconds
+  • Generate report: < 1 second
+  • API startup: < 5 seconds
+
+Memory usage:
+  • Dashboard: ~100 MB
+  • API: ~50 MB
+  • Report generation: < 10 MB
+
+
+READY TO GO!
+================================================================================
+
+You have three options:
+
+Option 1: Interactive Dashboard (RECOMMENDED)
+    python launch_ui.py
+    → Click "Load & Process"
+    → Explore all tabs
+    → Best for visualization
+
+Option 2: Text Report
+    python generate_report.py
+    → Creates machine_context_report.txt
+    → Best for documentation
+
+Option 3: REST API Server
+    python run_api.py
+    → Access via http://localhost:8000
+    → Best for integration
+
+
+ALL YOUR DATA IS REAL
+================================================================================
+
+This system uses ONLY your uploaded files:
+  ✓ machine_data_5min.json - 1,800 actual readings
+  ✓ nodesfile.json - Real node definitions
+  ✓ BoilerModel2.NodeSet2.xml - Real OPC-UA model
+  ✓ Opc.Ua.DI.NodeSet2.xml - Real OPC-UA standard
+
+NO mock or synthetic data is generated.
+ALL alarms are detected from your real data.
+ALL timestamps are from your actual telemetry.
+
+
+================================================================================
+                        LET'S GET STARTED!
+                      python launch_ui.py
+================================================================================

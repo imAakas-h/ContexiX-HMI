@@ -1,0 +1,411 @@
+================================================================================
+              MACHINE CONTEXT ENGINE - UPDATED FEATURES
+================================================================================
+
+✨ TWO MAJOR NEW FEATURES ADDED ✨
+
+================================================================================
+FEATURE 1: FILE UPLOAD & CUSTOM DATA PROCESSING
+================================================================================
+
+NOW YOU CAN:
+  ✓ Upload your own machine data files
+  ✓ Upload your own node metadata
+  ✓ Upload your own OPC-UA definitions
+  ✓ Upload your own configuration
+  ✓ Process ANY machine dataset
+  ✓ Multiple different files simultaneously
+
+HOW TO USE:
+  1. python launch_ui.py
+  2. File → Upload Machine Data (select your .json file)
+  3. File → Upload Node Metadata (select your .json file)
+  4. File → Upload Node XML Definitions (select your .xml file)
+  5. File → Upload Config (select your .yaml file) - OPTIONAL
+  6. Click "Load & Process"
+  7. View results in tabs
+
+NO MORE:
+  ✗ Hardcoded file paths
+  ✗ Files must be in specific locations
+  ✗ Can only process one specific dataset
+  ✗ Manual file renaming/moving
+
+UI CHANGES:
+  • New file upload section at top
+  • Shows selected file names in green
+  • Clear status for each file
+  • File menu with upload options
+
+
+================================================================================
+FEATURE 2: NLP-READY SUMMARY EXPORT
+================================================================================
+
+NOW YOU CAN:
+  ✓ Generate machine context in NLP-friendly format
+  ✓ Export to text file
+  ✓ Use with ChatGPT, Claude, or any LLM
+  ✓ Feed AI systems structured machine data
+  ✓ Automate insight generation
+  ✓ Create audit trails
+
+EXPORT FORMAT INCLUDES:
+  • Executive Summary
+  • Machine State Analysis
+  • Current Sensor Readings
+  • Health Factors
+  • Active Alarms (with timestamps)
+  • Trend Analysis
+  • Statistics
+  • Detected Anomalies
+  • Recommendations
+
+HOW TO USE:
+  1. Load data (upload files + click "Load & Process")
+  2. File → Export NLP Summary
+  3. Choose save location
+  4. nlp_summary.txt created
+  5. Paste content into ChatGPT/Claude
+  6. Ask for analysis/recommendations
+
+EXAMPLE LLM PROMPTS:
+  "Analyze this machine context and provide maintenance recommendations"
+  "What could cause these alarms and anomalies?"
+  "Generate an executive summary for management"
+  "Predict potential equipment failures based on this data"
+  "What immediate actions should be taken?"
+
+
+================================================================================
+UPDATED UI WORKFLOW
+================================================================================
+
+BEFORE (Fixed Files):
+  launch_ui.py
+    ↓
+  Click "Load & Process"
+    ↓
+  Uses hardcoded: machine_data_5min.json, nodesfile.json, etc.
+    ↓
+  View results
+
+AFTER (File Upload):
+  launch_ui.py
+    ↓
+  Upload YOUR files (4 options)
+    ↓
+  Click "Load & Process"
+    ↓
+  Uses YOUR selected files
+    ↓
+  View results
+    ↓
+  Export NLP Summary
+    ↓
+  Use in LLM
+
+
+================================================================================
+NEW MENU OPTIONS
+================================================================================
+
+File Menu:
+  ✓ Upload Machine Data (JSON)
+  ✓ Upload Node Metadata (JSON)
+  ✓ Upload Node XML Definitions (XML)
+  ✓ Upload Config (YAML)
+  ───────────────────────────────
+  ✓ Load & Process
+  ───────────────────────────────
+  ✓ Export NLP Summary ← NEW!
+  ───────────────────────────────
+  ✓ Exit
+
+
+================================================================================
+NLP SUMMARY EXAMPLE
+================================================================================
+
+================================================================================
+MACHINE CONTEXT - NLP SUMMARY
+================================================================================
+
+EXECUTIVE SUMMARY:
+The machine is currently running with normal overall health.
+Health score: 72/100
+Active alarms: 6
+Anomalies detected: 2
+
+MACHINE STATE ANALYSIS:
+Current State: RUNNING
+Confidence: 95%
+Duration in State: 120 seconds
+
+CURRENT SENSOR READINGS:
+Temperature: 24.70°C (INCREASING)
+Pressure: 1.032 bar (DECREASING)
+MotorSpeed: 1468.60 RPM (STABLE)
+MotorCurrent: 5.78 A (STABLE)
+Vibration: 0.519 mm/s (DECREASING)
+
+HEALTH FACTORS:
+• 6 warning alarm(s)
+• Communication quality: 100%
+
+ACTIVE ALARMS:
+1. [2026-09-10T19:13:37] Pressure: 0.783
+   Severity: WARNING
+   Threshold: 0.8
+   Message: Pressure fallen below threshold
+
+2. [2026-09-10T19:13:38] Temperature: 25.27
+   Severity: WARNING
+   Threshold: 25.0
+   Message: Temperature exceeded threshold
+
+... (4 more alarms)
+
+RECOMMENDATIONS:
+• Monitor closely and schedule maintenance soon
+• Address 6 active alarm(s)
+• Investigate 2 anomaly/ies
+
+================================================================================
+
+
+================================================================================
+USE CASES
+================================================================================
+
+USE CASE 1: PROCESS YOUR OWN MACHINE DATA
+──────────────────────────────────────────
+You have: boiler_temp_data.json, boiler_nodes.json
+  1. python launch_ui.py
+  2. Upload your files
+  3. Click "Load & Process"
+  4. Analyze on dashboard
+
+
+USE CASE 2: FEED TO LLM FOR ANALYSIS
+─────────────────────────────────────
+You want: AI insights about machine health
+  1. Load data (upload files)
+  2. Export NLP Summary
+  3. Paste into ChatGPT
+  4. Ask: "What maintenance should I do?"
+  5. Get AI-powered recommendations
+
+
+USE CASE 3: BATCH PROCESS MULTIPLE DATASETS
+─────────────────────────────────────────────
+You have: 10 different machine logs
+  1. For each dataset:
+     - Upload data files
+     - Export NLP summary
+     - Save with dataset name
+  2. Analyze all summaries
+
+
+USE CASE 4: INTEGRATION WITH AUTOMATION
+────────────────────────────────────────
+You want: Automated analysis workflow
+  1. Use Python API (not just UI)
+  2. Programmatically upload files
+  3. Generate NLP summary
+  4. Send to LLM via API
+  5. Store results automatically
+
+
+================================================================================
+TECHNICAL CHANGES
+================================================================================
+
+Updated Files:
+  ✓ app/ui/dashboard.py
+    - Added file upload buttons
+    - Added file selector dialogs
+    - Added NLP summary export
+    - Added _generate_nlp_summary() method
+    - Added export_nlp_summary() method
+
+New Capabilities:
+  ✓ filedialog for file selection
+  ✓ Dynamic file path handling
+  ✓ NLP-ready text formatting
+  ✓ Structured summary generation
+  ✓ Export to custom location
+
+Backwards Compatible:
+  ✓ Still works with default files
+  ✓ Can upload custom files
+  ✓ No breaking changes
+
+
+================================================================================
+QUICK START
+================================================================================
+
+Step 1: Start UI
+  $ python launch_ui.py
+
+Step 2: Upload Your Files
+  Click: File → Upload Machine Data
+  Select: your_data.json
+  
+  Click: File → Upload Node Metadata
+  Select: your_nodes.json
+  
+  Click: File → Upload Node XML
+  Select: your_definitions.xml
+
+Step 3: Process
+  Click: "Load & Process"
+
+Step 4: Export NLP Summary
+  File → Export NLP Summary
+  Save to: C:\Reports\summary.txt
+
+Step 5: Use in LLM
+  • Open nlp_summary.txt
+  • Paste into ChatGPT/Claude
+  • Ask questions
+  • Get insights
+
+
+================================================================================
+NLP INTEGRATION EXAMPLES
+================================================================================
+
+EXAMPLE 1: Get Maintenance Recommendations
+─────────────────────────────────────────
+ChatGPT Prompt:
+  "Analyze this machine context and provide a prioritized list of
+   maintenance actions needed. Include estimated urgency (immediate,
+   within week, within month)."
+  
+  [Paste nlp_summary.txt]
+
+Response: AI provides structured maintenance plan
+
+
+EXAMPLE 2: Root Cause Analysis
+──────────────────────────────
+Claude Prompt:
+  "Given the detected alarms and anomalies in this industrial machine,
+   perform a root cause analysis. What underlying issues could explain
+   these symptoms?"
+  
+  [Paste nlp_summary.txt]
+
+Response: AI identifies probable causes and suggests diagnostics
+
+
+EXAMPLE 3: Predictive Maintenance
+────────────────────────────────
+ChatGPT Prompt:
+  "Based on the trends and current readings, predict which components
+   might fail in the next 48 hours and why."
+  
+  [Paste nlp_summary.txt]
+
+Response: AI predicts potential failures
+
+
+EXAMPLE 4: Compliance Report
+───────────────────────────
+Prompt:
+  "Generate a compliance report for manufacturing standards based on
+   this machine data. Include any deviations found."
+  
+  [Paste nlp_summary.txt]
+
+Response: AI generates compliance documentation
+
+
+================================================================================
+COMPARISON TABLE
+================================================================================
+
+Feature               | Before    | After
+─────────────────────┼───────────┼──────────────
+Upload custom files  | No        | ✓ Yes
+Process your data    | Fixed set | ✓ Any file
+NLP export           | No        | ✓ Yes
+LLM integration      | No        | ✓ Yes
+File location        | Hardcoded | ✓ Dynamic
+Multiple datasets    | Sequential| ✓ Easy
+Export format        | JSON only | ✓ NLP text
+Audit trail          | Limited   | ✓ Full
+
+
+================================================================================
+BENEFITS
+================================================================================
+
+✓ FLEXIBILITY
+  Process any machine data, not just the sample
+
+✓ LLM-READY
+  Generate text formatted for AI analysis
+
+✓ AUTOMATION
+  Export and feed to LLMs for automated insights
+
+✓ SCALABILITY
+  Process multiple datasets easily
+
+✓ INTEGRATION
+  Connect with ChatGPT, Claude, or other AI
+
+✓ AUDIT TRAIL
+  Export summaries as documentation
+
+✓ EFFICIENCY
+  Get AI insights without manual analysis
+
+✓ INTELLIGENCE
+  Leverage large language models for recommendations
+
+
+================================================================================
+WHAT'S STILL THE SAME
+================================================================================
+
+✓ All existing features work
+✓ Real-time graphs (6 variables)
+✓ Alarm detection
+✓ Trend analysis
+✓ Health scoring
+✓ REST API
+✓ Report generation
+✓ Configuration system
+
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Try with provided sample data:
+   $ python launch_ui.py
+   Click "Load & Process"
+   See results
+
+2. Try with your own data:
+   File → Upload Machine Data
+   Select your file
+   View analysis
+
+3. Export NLP summary:
+   File → Export NLP Summary
+   Paste into ChatGPT
+
+4. Automate further:
+   Use Python API directly
+   Build custom workflows
+
+
+================================================================================
+                         READY TO USE!
+                    python launch_ui.py
+================================================================================

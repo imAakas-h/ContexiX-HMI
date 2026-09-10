@@ -1,0 +1,339 @@
+================================================================================
+                    MACHINE CONTEXT ENGINE - DASHBOARD GUIDE
+================================================================================
+
+LAUNCHING THE UI
+================================================================================
+
+    Run: python launch_ui.py
+
+    The application will open with this layout:
+
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │ File  Help                    ⚙ MACHINE CONTEXT ENGINE    Status: Ready │
+    │ [Load & Process]                                                        │
+    └─────────────────────────────────────────────────────────────────────────┘
+    │                                                                           │
+    │  ┌──────────────┬──────────────┬───────────────┬──────────────────────┐ │
+    │  │ Real-Time    │ Current      │ Alarm         │ Health Status        │ │
+    │  │ Graphs       │ Readings     │ Timeline      │                      │ │
+    │  └──────────────┴──────────────┴───────────────┴──────────────────────┘ │
+    │  │                                                                      │ │
+    │  │ [Tab content displayed here]                                       │ │
+    │  │                                                                      │ │
+    │  │                                                                      │ │
+    │  │                                                                      │ │
+    │  │                                                                      │ │
+    │  └──────────────────────────────────────────────────────────────────────┘ │
+    │                                                                           │
+    └─────────────────────────────────────────────────────────────────────────┘
+
+
+TAB 1: REAL-TIME GRAPHS
+================================================================================
+
+Grid of 6 graphs showing all machine variables:
+
+    Temperature         Pressure            MotorSpeed
+    ┌──────────┐       ┌──────────┐       ┌──────────┐
+    │    25    │       │   1.2    │       │  1500    │
+    │   ╱╲     │       │  ╱      │       │    ╱╲    │
+    │  ╱  ╲    │       │ ╱        │       │   ╱  ╲   │
+    │ ╱    ╲   │       │         │       │  ╱    ╲  │
+    └──────────┘       └──────────┘       └──────────┘
+    Min: 14.7          Min: 0.78           Min: 1468
+    Max: 25.3          Max: 1.25           Max: 1554
+    Avg: 19.8          Avg: 1.01           Avg: 1549
+
+    MotorCurrent        Vibration           MachineStatus
+    ┌──────────┐       ┌──────────┐       ┌──────────┐
+    │   5.8    │       │  0.51    │       │ RUNNING  │
+    │    ╱╲    │       │    ╱╲    │       │          │
+    │   ╱  ╲   │       │   ╱  ╲   │       │ (enum)   │
+    │  ╱    ╲  │       │  ╱    ╲  │       │          │
+    └──────────┘       └──────────┘       └──────────┘
+    Min: 4.41          Min: 0.519          RUNNING
+    Max: 5.87          Max: 0.814          IDLE
+    Avg: 5.48          Avg: 0.703          WARNING
+
+Features:
+  • Real-time data plotted from machine_data_5min.json
+  • Min/Max/Average statistics
+  • Trend lines with colors
+  • Interactive matplotlib
+  • Scroll to see all graphs
+
+
+TAB 2: CURRENT READINGS
+================================================================================
+
+Table view of latest sensor values:
+
+    Tag              Value    Unit    Trend          Status
+    ─────────────────────────────────────────────────────────
+    Temperature      24.7     °C      ↗ INCREASING   GOOD
+    Pressure         1.032    bar     ↘ DECREASING   GOOD
+    MotorSpeed       1468.6   RPM     ↘ DECREASING   GOOD
+    MotorCurrent     5.78     A       → STABLE       GOOD
+    Vibration        0.519    mm/s    ↘ DECREASING   GOOD
+    MachineStatus    RUNNING  -       ? UNKNOWN      GOOD
+
+    Total Readings: 6
+    Communication Quality: 100%
+
+Features:
+  • Real-time snapshot of sensor values
+  • Units from node metadata
+  • Trend directions (↗ ↘ →)
+  • Data quality indicators
+  • Sortable columns
+
+
+TAB 3: ALARM TIMELINE
+================================================================================
+
+Chronological list of all detected alarms:
+
+    [19:13:37]
+    Pressure : 0.783bar
+    [WARNING]
+    Reason: Pressure fallen below threshold (0.8)
+    ────────────────────────────────────────────────────────────
+
+    [19:13:38]
+    Temperature : 25.27°C
+    [WARNING]
+    Reason: Temperature exceeded threshold (25.0)
+    ────────────────────────────────────────────────────────────
+
+    [19:13:42]
+    MotorCurrent : 4.37A
+    [WARNING]
+    Reason: MotorCurrent fallen below threshold (4.5)
+    ────────────────────────────────────────────────────────────
+
+    ... (3 more alarms)
+
+Features:
+  • Exact timestamps for each alarm
+  • Value that triggered alarm
+  • Threshold that was crossed
+  • Reason for alarm
+  • Sortable by time/severity
+  • Color-coded by severity
+    - Yellow: WARNING
+    - Red: CRITICAL
+
+
+TAB 4: HEALTH STATUS
+================================================================================
+
+Machine health overview:
+
+    ┌─────────────────────────────────────────────────────┐
+    │ Health Score: 0/100                                 │
+    │ Status: CRITICAL                                    │
+    │ Machine State: RUNNING                              │
+    └─────────────────────────────────────────────────────┘
+
+    Health Factors:
+      • 6 warning alarm(s)
+      • 0 anomaly/ies detected
+      • Communication quality: 100%
+
+    Active Alarms: 6
+
+    Anomalies Detected: 0
+
+    ┌─────────────────────────────────────────────────────┐
+    │ Recommendations:                                    │
+    │   Check alarm thresholds in config.yaml             │
+    │   Verify threshold values match your data range     │
+    │   Review alarm trigger conditions                   │
+    └─────────────────────────────────────────────────────┘
+
+Features:
+  • Overall health score visualization
+  • Machine state with duration
+  • Health factor breakdown
+  • Active alarm summary
+  • Actionable recommendations
+
+
+MENU OPTIONS
+================================================================================
+
+File Menu:
+  • Load Data
+    - Loads machine_data_5min.json
+    - Processes through all engines
+    - Updates all tabs automatically
+    - Shows progress status
+
+  • Exit
+    - Closes the application
+
+Help Menu:
+  • About
+    - Shows application version
+    - License information
+
+
+WORKFLOW
+================================================================================
+
+1. START APPLICATION
+   ↓
+   python launch_ui.py
+   ↓
+   Dashboard opens
+
+2. LOAD DATA
+   ↓
+   Click "Load & Process" button
+   ↓
+   Status shows "Processing..."
+   ↓
+   Data loaded, all tabs updated
+
+3. VIEW GRAPHS
+   ↓
+   Click "Real-Time Graphs" tab
+   ↓
+   See all 6 variables plotted
+   ↓
+   Review min/max/avg statistics
+
+4. CHECK CURRENT VALUES
+   ↓
+   Click "Current Readings" tab
+   ↓
+   See latest sensor values
+   ↓
+   Monitor trends and quality
+
+5. REVIEW ALARMS
+   ↓
+   Click "Alarm Timeline" tab
+   ↓
+   See all detected alarms chronologically
+   ↓
+   Review exact timestamps and reasons
+
+6. CHECK HEALTH
+   ↓
+   Click "Health Status" tab
+   ↓
+   See overall machine health
+   ↓
+   Review health factors and recommendations
+
+
+KEYBOARD SHORTCUTS
+================================================================================
+
+Ctrl+L    - Load/Refresh data
+Ctrl+Q    - Quit application
+Tab       - Switch to next tab
+Shift+Tab - Switch to previous tab
+
+
+TROUBLESHOOTING
+================================================================================
+
+Problem: Dashboard won't start
+Solution:
+  • Ensure Tkinter is installed: python -m tkinter
+  • Install matplotlib: pip install matplotlib
+  • Run: python test_ui.py
+
+Problem: No graphs showing
+Solution:
+  • Verify machine_data_5min.json exists
+  • Check data format is correct
+  • Ensure data contains numeric values
+
+Problem: No alarms detected
+Solution:
+  • Check config.yaml thresholds
+  • Verify threshold values match data range
+  • Review alarm logic in alarm_engine.py
+
+Problem: Wrong units displayed
+Solution:
+  • Update units in config.yaml
+  • Verify node mapping is correct
+  • Check node_metadata enrichment
+
+
+EXAMPLE SESSION
+================================================================================
+
+$ python launch_ui.py
+[UI window opens]
+
+[Click "Load & Process"]
+Processing machine data...
+
+[UI updates]
+Status: Ready | Alarms: 6
+
+[Click "Real-Time Graphs" tab]
+[6 graphs appear with 5-minute data]
+
+[Click "Alarm Timeline" tab]
+[6 alarms shown with timestamps from 19:13 to 19:14]
+
+[Click "Current Readings" tab]
+[Table shows latest values for all 6 variables]
+
+[Click "Health Status" tab]
+[Health score 0/100 with CRITICAL status]
+
+[File → Exit]
+[Application closes]
+
+
+CUSTOMIZING THE DASHBOARD
+================================================================================
+
+To modify colors, fonts, or layout:
+
+1. Edit app/ui/dashboard.py
+   • setup_style() - Configure TTK style
+   • Colors: bg_color, fg_color, accent_color
+
+2. Edit app/ui/graphs.py
+   • Figure settings (DPI, colors, size)
+   • Subplot layout (num_cols, num_rows)
+   • Plot colors and styling
+
+3. Edit config.yaml
+   • Alarm thresholds
+   • Machine name
+   • Health scoring
+
+
+INTEGRATION
+================================================================================
+
+Use with API:
+  python run_api.py
+  
+  Then in dashboard, you could add:
+  - Upload to API endpoint
+  - Compare with remote server
+  - Export results
+
+Use with Python:
+  from app.main import MachineContextEngine
+  engine = MachineContextEngine(...)
+  context = engine.process("machine_data_5min.json")
+  
+  Display context info on dashboard
+  Create custom visualizations
+
+
+================================================================================
+                              END OF GUIDE
+================================================================================

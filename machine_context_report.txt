@@ -1,0 +1,130 @@
+================================================================================
+MACHINE CONTEXT ENGINE (MCE)
+================================================================================
+Execution Start Time : 21:54:12
+Data Source          : machine_data_5min.json
+Mode                 : Offline Context Generation
+================================================================================
+
+[21:54:12] Loading machine data
+[+] 6 tags loaded
+[+] Alarm definitions loaded
+[+] 5-minute historical OPC data loaded
+[+] OPC-UA Nodesets loaded
+[+] Asset Hierarchy built
+
+================================================================================
+ALARM & EVENT TIMELINE
+================================================================================
+[19:13:37]
+Pressure : 0.783bar
+[!] WARNING GENERATED
+Reason: Pressure fallen below threshold (0.8)
+------------------------------------------------------------
+[19:13:38]
+Temperature : 25.27°C
+[!] WARNING GENERATED
+Reason: Temperature exceeded threshold (25.0)
+------------------------------------------------------------
+[19:13:42]
+MotorCurrent : 4.37A
+[!] WARNING GENERATED
+Reason: MotorCurrent fallen below threshold (4.5)
+------------------------------------------------------------
+[19:14:09]
+Temperature : 14.89°C
+[!] WARNING GENERATED
+Reason: Temperature fallen below threshold (15.0)
+------------------------------------------------------------
+[19:14:26]
+Vibration : 0.814mm/s
+[!] WARNING GENERATED
+Reason: Vibration exceeded threshold (0.8)
+------------------------------------------------------------
+[19:14:36]
+MotorCurrent : 6.05A
+[!] WARNING GENERATED
+Reason: MotorCurrent exceeded threshold (6.0)
+------------------------------------------------------------
+
+================================================================================
+CONTEXT GENERATION TIMELINE
+================================================================================
+[21:54:12] Building Context
+[+] Context Generated
+
+================================================================================
+MACHINE CONTEXT REPORT
+================================================================================
+Machine : Machine System
+Current State : RUNNING
+Health Status : CRITICAL
+Health Score  : 0/100
+
+Temperature Analysis
+--------------------
+Current Value : 24.7°C
+Trend         : INCREASING
+
+Pressure Analysis
+--------------------
+Current Value : 1.032bar
+Trend         : DECREASING
+
+MotorSpeed Analysis
+--------------------
+Current Value : 1468.6RPM
+Trend         : DECREASING
+
+MotorCurrent Analysis
+--------------------
+Current Value : 5.78A
+Trend         : STABLE
+
+Vibration Analysis
+--------------------
+Current Value : 0.519mm/s
+Trend         : DECREASING
+
+MachineStatus Analysis
+--------------------
+Current Value : RUNNING
+Trend         : UNKNOWN
+
+Active Alarms:
+  VIBRATION_HIGH: Vibration exceeded threshold (0.8)
+  MOTORCURRENT_LOW: MotorCurrent fallen below threshold (4.5)
+  TEMPERATURE_LOW: Temperature fallen below threshold (15.0)
+  PRESSURE_LOW: Pressure fallen below threshold (0.8)
+  TEMPERATURE_HIGH: Temperature exceeded threshold (25.0)
+  MOTORCURRENT_HIGH: MotorCurrent exceeded threshold (6.0)
+Severity      : CRITICAL
+Priority Score : 0
+
+Recommendation: Inspect immediately.
+------------------------------------------------------------
+
+================================================================================
+PLANT HEALTH SUMMARY
+================================================================================
+Total Machines Analysed      : 1
+Running Machines             : 1
+Warning Machines             : 0
+Critical Machines            : 1
+Total Alarm Events           : 6
+Highest Temperature Reading  : Temperature (24.7°C)
+Highest Pressure Reading     : Pressure (1.032bar)
+Plant Health Score           : 0 / 100
+Overall Plant Status         : ATTENTION REQUIRED
+
+================================================================================
+OUTPUT GENERATED
+================================================================================
+[+] context.json
+[+] summary.txt
+[+] report.txt
+Execution End Time : 21:54:12
+Total Runtime      : 0.0 seconds
+================================================================================
+MACHINE CONTEXT ENGINE COMPLETED SUCCESSFULLY
+================================================================================

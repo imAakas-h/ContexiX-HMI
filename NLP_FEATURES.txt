@@ -1,0 +1,423 @@
+================================================================================
+                 NLP-READY SUMMARY & FILE UPLOAD FEATURES
+================================================================================
+
+NEW FEATURES ADDED TO THE DASHBOARD
+================================================================================
+
+1. FILE UPLOAD CAPABILITY
+   ─────────────────────────
+   ✓ Upload your own machine data (JSON)
+   ✓ Upload your own node metadata (JSON)
+   ✓ Upload your own node XML definitions
+   ✓ Upload your own config file (YAML)
+   
+   No need to put files in default locations!
+   Process ANY machine data you have.
+
+2. NLP-READY SUMMARY GENERATION
+   ──────────────────────────────
+   ✓ Generate machine context in NLP-friendly format
+   ✓ Export to text file for AI/LLM processing
+   ✓ Structured sections for easy parsing
+   ✓ Natural language descriptions
+
+
+================================================================================
+HOW TO USE FILE UPLOAD
+================================================================================
+
+Step 1: LAUNCH THE UI
+  $ python launch_ui.py
+
+Step 2: UPLOAD YOUR FILES
+  Via File Menu:
+    File → Upload Machine Data (*.json)
+    File → Upload Node Metadata (*.json)
+    File → Upload Node XML Definitions (*.xml)
+    File → Upload Config (*.yaml)
+  
+  OR via buttons in the "Upload Your Files" section
+
+Step 3: CLICK "Load & Process"
+  ✓ Engine processes YOUR uploaded files
+  ✓ Generates analysis
+  ✓ Updates all tabs
+
+Step 4: VIEW RESULTS
+  ✓ Real-time graphs
+  ✓ Current readings
+  ✓ Alarm timeline
+  ✓ Health status
+
+Step 5: (OPTIONAL) EXPORT NLP SUMMARY
+  File → Export NLP Summary
+  Choose location to save
+  ✓ nlp_summary.txt created
+  ✓ Ready for LLM processing
+
+
+================================================================================
+NLP SUMMARY FORMAT
+================================================================================
+
+The exported summary contains structured sections for NLP processing:
+
+EXECUTIVE SUMMARY:
+  "The machine is currently running with good overall health."
+  Health score: 75/100
+  Active alarms: 2
+  Anomalies detected: 1
+
+MACHINE STATE ANALYSIS:
+  Current State: RUNNING
+  Previous State: IDLE
+  Duration in State: 300 seconds
+  Confidence: 95%
+
+CURRENT SENSOR READINGS:
+  Temperature: 22.39°C (INCREASING, Quality: GOOD)
+  Pressure: 1.206 bar (STABLE, Quality: GOOD)
+  Motor Speed: 1546.8 RPM (STABLE, Quality: GOOD)
+  ...
+
+HEALTH FACTORS:
+  • Temperature above threshold
+  • Vibration level anomaly detected
+
+ACTIVE ALARMS:
+  1. [timestamp] Temperature: 82.5°C
+     Severity: WARNING
+     Threshold: 80.0
+     Message: Temperature exceeded threshold
+  
+  2. [timestamp] Pressure: 3.2 bar
+     Severity: CRITICAL
+     Threshold: 3.0
+     Message: Pressure exceeded critical threshold
+
+TREND ANALYSIS:
+  Temperature: INCREASING
+  Pressure: STABLE
+  Motor Speed: DECREASING
+
+STATISTICS:
+  Temperature:
+    Min: 20.57
+    Max: 25.28
+    Mean: 22.84
+    Count: 1800
+  ...
+
+DETECTED ANOMALIES:
+  • Temperature (HIGH_VALUE): Temp is above normal range
+  • Vibration (OUTLIER): Vibration is statistical outlier
+
+RECOMMENDATIONS:
+  • Monitor closely and schedule maintenance soon
+  • Address 2 active alarm(s)
+  • Investigate 1 anomaly/ies
+
+
+================================================================================
+USING THE NLP SUMMARY WITH LARGE LANGUAGE MODELS
+================================================================================
+
+Example 1: EXTRACT KEY INSIGHTS
+───────────────────────────────
+Prompt to GPT/Claude:
+  "Analyze this machine context summary and provide key insights about
+   machine health and required maintenance."
+  
+  [Paste nlp_summary.txt content]
+
+Example 2: GENERATE MAINTENANCE REPORT
+──────────────────────────────────────
+Prompt:
+  "Based on this industrial machine data, generate a maintenance report
+   with priority recommendations."
+  
+  [Paste nlp_summary.txt content]
+
+Example 3: PREDICT ISSUES
+─────────────────────────
+Prompt:
+  "Given these machine readings and trends, predict potential equipment
+   failures in the next 24 hours."
+  
+  [Paste nlp_summary.txt content]
+
+Example 4: SUMMARIZE FOR MANAGER
+───────────────────────────────
+Prompt:
+  "Write a one-paragraph executive summary suitable for management about
+   the current machine status."
+  
+  [Paste nlp_summary.txt content]
+
+Example 5: ROOT CAUSE ANALYSIS
+──────────────────────────────
+Prompt:
+  "Analyze the active alarms and anomalies. What could be the root causes
+   and what immediate actions should be taken?"
+  
+  [Paste nlp_summary.txt content]
+
+
+================================================================================
+SAMPLE NLP SUMMARY OUTPUT
+================================================================================
+
+================================================================================
+MACHINE CONTEXT - NLP SUMMARY
+================================================================================
+
+EXECUTIVE SUMMARY:
+────────────────────────────────────────────────────────────────────────────
+The machine is currently running with normal overall health.
+Health score: 72/100
+Active alarms: 6
+Anomalies detected: 2
+
+MACHINE STATE ANALYSIS:
+────────────────────────────────────────────────────────────────────────────
+Current State: RUNNING
+Previous State: IDLE
+Duration in State: 120 seconds
+State Reason: From MachineStatus tag: RUNNING
+Confidence: 95%
+
+CURRENT SENSOR READINGS:
+────────────────────────────────────────────────────────────────────────────
+Temperature: 24.70°C (INCREASING, Quality: GOOD)
+Pressure: 1.032 bar (DECREASING, Quality: GOOD)
+MotorSpeed: 1468.60 RPM (DECREASING, Quality: GOOD)
+MotorCurrent: 5.78 A (STABLE, Quality: GOOD)
+Vibration: 0.519 mm/s (DECREASING, Quality: GOOD)
+MachineStatus: RUNNING (UNKNOWN, Quality: GOOD)
+
+HEALTH FACTORS:
+────────────────────────────────────────────────────────────────────────────
+• 6 warning alarm(s)
+• Communication quality: 100%
+
+ACTIVE ALARMS:
+────────────────────────────────────────────────────────────────────────────
+1. [2026-09-10T19:13:37] Pressure: 0.783
+   Severity: WARNING
+   Threshold: 0.8
+   Message: Pressure fallen below threshold (0.8)
+
+2. [2026-09-10T19:13:38] Temperature: 25.27
+   Severity: WARNING
+   Threshold: 25.0
+   Message: Temperature exceeded threshold (25.0)
+
+3. [2026-09-10T19:13:42] MotorCurrent: 4.37
+   Severity: WARNING
+   Threshold: 4.5
+   Message: MotorCurrent fallen below threshold (4.5)
+
+4. [2026-09-10T19:14:09] Temperature: 14.89
+   Severity: WARNING
+   Threshold: 15.0
+   Message: Temperature fallen below threshold (15.0)
+
+5. [2026-09-10T19:14:26] Vibration: 0.814
+   Severity: WARNING
+   Threshold: 0.8
+   Message: Vibration exceeded threshold (0.8)
+
+6. [2026-09-10T19:14:36] MotorCurrent: 6.05
+   Severity: WARNING
+   Threshold: 6.0
+   Message: MotorCurrent exceeded threshold (6.0)
+
+TREND ANALYSIS:
+────────────────────────────────────────────────────────────────────────────
+Temperature: INCREASING
+Pressure: DECREASING
+MotorSpeed: DECREASING
+MotorCurrent: STABLE
+Vibration: DECREASING
+
+STATISTICS:
+────────────────────────────────────────────────────────────────────────────
+Temperature:
+  Min: 14.73
+  Max: 25.28
+  Mean: 19.84
+  Count: 1800
+
+Pressure:
+  Min: 0.78
+  Max: 1.25
+  Mean: 1.01
+  Count: 1800
+
+MotorSpeed:
+  Min: 1468.0
+  Max: 1554.0
+  Mean: 1549.5
+  Count: 1800
+
+MotorCurrent:
+  Min: 4.41
+  Max: 5.87
+  Mean: 5.48
+  Count: 1800
+
+Vibration:
+  Min: 0.519
+  Max: 0.814
+  Mean: 0.703
+  Count: 1800
+
+DETECTED ANOMALIES:
+────────────────────────────────────────────────────────────────────────────
+• Vibration (HIGH_VALUE): Vibration is above normal range: 0.519
+• Vibration (OUTLIER): Vibration is a statistical outlier (z=2.12)
+
+RECOMMENDATIONS:
+────────────────────────────────────────────────────────────────────────────
+• Monitor closely and schedule maintenance soon
+• Address 6 active alarm(s)
+• Investigate 2 anomaly/ies
+
+================================================================================
+Report Generated: 2026-09-10T21:35:13.912579
+================================================================================
+
+
+================================================================================
+WORKFLOW EXAMPLE
+================================================================================
+
+1. Launch UI:
+   $ python launch_ui.py
+
+2. Click: File → Upload Machine Data
+   Select your_machine_data.json
+
+3. Click: File → Upload Node Metadata
+   Select your_nodes.json
+
+4. Click: File → Upload Node XML
+   Select your_definitions.xml
+
+5. Click: File → Upload Config
+   Select your_config.yaml (optional)
+
+6. Click: "Load & Process" button
+   ↓
+   Engine processes YOUR files
+   ↓
+   Results displayed in tabs
+
+7. Click: File → Export NLP Summary
+   Choose location: C:\Reports\summary.txt
+   ↓
+   nlp_summary.txt created
+
+8. Use in LLM:
+   • Open nlp_summary.txt
+   • Paste into ChatGPT/Claude
+   • Ask for analysis/recommendations
+
+
+================================================================================
+SUPPORTED FILE FORMATS
+================================================================================
+
+Machine Data (JSON):
+  Required fields:
+    - collection_info: source, duration, sampling_interval, start_time, end_time
+    - data: array of readings with timestamp, node_id, tag, value, datatype, quality
+
+Node Metadata (JSON):
+  Structure:
+    - NodeList: array of nodes with NodeId, Name, DataType, Description
+    - FolderList: nested folder structure (optional)
+
+Node XML (XML):
+  Format: OPC-UA NodeSet2 (standard)
+  Elements: UAVariable, UAObject, References
+
+Config (YAML):
+  Sections:
+    - machine: name, etc.
+    - nodes: node_id overrides
+    - engines: thresholds for alarm/anomaly/health
+
+
+================================================================================
+KEY BENEFITS
+================================================================================
+
+✓ UPLOAD ANY MACHINE DATA
+  • No more hardcoded file paths
+  • Process multiple different datasets
+  • Works with YOUR files
+
+✓ NLP-READY FORMAT
+  • Structured text sections
+  • Natural language descriptions
+  • Easy for AI to parse
+
+✓ LLM INTEGRATION
+  • Export and paste into ChatGPT
+  • Get insights and recommendations
+  • Automate analysis workflow
+
+✓ FLEXIBLE CONFIGURATION
+  • Customize per dataset
+  • Different thresholds
+  • Project-specific settings
+
+✓ PROFESSIONAL OUTPUT
+  • Exportable summaries
+  • Executive level reporting
+  • Audit trail ready
+
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Try with your own data:
+   $ python launch_ui.py
+   [Upload your files]
+   [Export NLP summary]
+
+2. Integrate with LLM:
+   • Feed NLP summary to ChatGPT/Claude
+   • Get custom analysis
+   • Automate insights
+
+3. Build automation:
+   • Script the file upload
+   • Process in batch
+   • Generate reports automatically
+
+4. Share insights:
+   • Export NLP summaries
+   • Share with team
+   • Present to management
+
+
+================================================================================
+QUESTIONS?
+================================================================================
+
+• How to upload files? → File menu or buttons in UI
+• Where are summaries saved? → You choose when exporting
+• Can I use my own thresholds? → Yes, upload config.yaml
+• How to integrate with LLM? → Export NLP summary, paste into ChatGPT
+• Can I process multiple files? → Yes, one at a time
+• Are there limits? → No, process any size dataset
+
+
+================================================================================
+                         START USING NOW!
+                    python launch_ui.py
+================================================================================
