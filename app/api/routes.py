@@ -11,6 +11,7 @@ from app.main import MachineContextEngine
 from app.inputs.mock_fleet import BOILER_NAMES, generate_fleet
 from app.context.operator_query import resolve_query
 from app.context.suggest_engine import SuggestEngine
+from app.engines.dynamic_priority_engine import DynamicPriorityEngine
 from app.ui.nlp_templates import NLP_NARRATIVE_TEMPLATE
 
 
@@ -56,6 +57,7 @@ def create_app(engine: MachineContextEngine) -> FastAPI:
     }
     web_root = Path(__file__).resolve().parents[2] / "web"
     suggest_engine = SuggestEngine()
+    dpe = DynamicPriorityEngine()
 
     def series_for(machine: str) -> dict[str, list[dict]]:
         """Serialize the selected unit's actual rolling samples for graphing."""
@@ -97,6 +99,25 @@ def create_app(engine: MachineContextEngine) -> FastAPI:
     @app.post("/api/query")
     async def operator_query(request: QueryRequest):
         resolved = resolve_query(request.text, request.machine)
+        normalized_query = " ".join(request.text.lower().replace("_", " ").split())
+        action = next(
+            (
+                widget for widget in dpe.registry.values()
+                if " ".join(widget.name.lower().split()) in normalized_query
+            ),
+            None,
+        )
+        if action:
+            layout = dpe.record_operator_interaction(action.action_id)
+            machine_name = f"Boiler-{int(action.asset_id[-1]):02d}"
+            return {
+                "query": {"machine": machine_name, "intent": "action"},
+                "response": f"Executed {action.name} on {machine_name}. "
+                f"Recency reset to {action.recency:.2f}; frequency is {action.frequency:.2f}; "
+                f"priority is now {action.priority_score:.3f}.",
+                "action_id": action.action_id,
+                "layout": layout,
+            }
         if resolved.machine == "ALL":
             response = "\n".join(
                 f"{name}: {context.machine_state}, health {context.health_score:.0f}/100, "
@@ -147,10 +168,37 @@ def create_app(engine: MachineContextEngine) -> FastAPI:
     @app.get("/api/suggest")
     async def suggest(query: str = ""):
         """Return ranked autocomplete options for live operator search."""
-        return [
+        suggestions = [
             {"text": item.text, "category": item.category, "icon": item.icon, "display": item.display}
             for item in suggest_engine.suggest(query)
         ]
+        normalized_query = " ".join(query.lower().split())
+        if normalized_query:
+            action_suggestions = [
+                {
+                    "text": widget.name,
+                    "category": "Action",
+                    "icon": "⚡",
+                    "display": f"⚡ [Action]  {widget.name} · {widget.asset_id.replace('_', '-')}",
+                }
+                for widget in dpe.registry.values()
+                if normalized_query in widget.name.lower()
+            ]
+            suggestions.extend(action_suggestions)
+        return suggestions[:7]
+
+    @app.get("/api/ui/layout-schema")
+    async def get_layout_schema():
+        """Return the current safety and adaptive widget layout."""
+        return dpe.evaluate_priorities_and_layout()
+
+    @app.post("/api/ui/action/{action_id}/interact")
+    async def interact_with_action(action_id: str):
+        """Record an operator action and return the re-ranked layout."""
+        try:
+            return dpe.record_operator_interaction(action_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
     
     @app.get("/health")
     async def health():

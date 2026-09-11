@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="/assets/app.css">
   <link rel="stylesheet" href="/assets/suggestions.css">
   <link rel="stylesheet" href="/assets/charts.css">
+  <link rel="stylesheet" href="/assets/adaptive.css">
+  <link rel="stylesheet" href="/assets/adaptive-overrides.css">
+  <link rel="stylesheet" href="/assets/priority-compact.css">
+  <link rel="stylesheet" href="/assets/drawer-below.css">
+  <link rel="stylesheet" href="/assets/control-label.css">
+  <link rel="stylesheet" href="/assets/severity-cards.css">
+  <link rel="stylesheet" href="/assets/operator-console.css">
 </head>
 <body>
   <div class="shell">
@@ -18,12 +25,25 @@
 
     <main>
       <section class="query-strip">
-        <div class="query-copy"><span class="eyebrow">OPERATOR CONSOLE</span><h1>Keep the plant in view.</h1></div>
+        <div class="query-copy"><span class="eyebrow">OPERATOR CONSOLE</span></div>
         <form id="queryForm" class="query-form"><div class="search-box"><input id="queryInput" autocomplete="off" placeholder="Ask about any boiler..." aria-label="Ask about any boiler"><div id="suggestions" class="suggestions" hidden></div></div><button type="button" id="voiceButton" class="voice-button" title="Search by voice" aria-label="Search by voice">●</button><button type="submit">Query <span>↵</span></button></form>
       </section>
       <section id="response" class="response" hidden><div class="response-label">OPERATOR RESPONSE</div><pre id="responseText"></pre></section>
 
+      <section class="adaptive-shell" aria-label="Adaptive operator controls">
+        <div id="safety-panel" class="safety-panel"></div>
+        <div class="adaptive-main">
+          <div class="adaptive-heading"><span class="eyebrow">DYNAMIC PRIORITY ENGINE</span><span id="dpeStatus">LAYOUT SYNCHRONIZED</span></div>
+          <div id="tier-1-grid" class="grid-container"></div>
+        </div>
+      </section>
+
       <section class="fleet-grid" id="fleetCards"></section>
+
+      <section class="adaptive-lower" aria-label="Secondary and memory actions">
+        <aside id="tier-2-drawer" class="tier-2-drawer"></aside>
+        <section id="tier-3-search" class="tier-3-search"></section>
+      </section>
 
       <nav class="tabs" aria-label="Views">
         <button class="tab active" data-view="readings">Current Readings</button>
