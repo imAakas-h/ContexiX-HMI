@@ -1,13 +1,17 @@
 """FastAPI routes for Machine Context Engine."""
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
-import json
-import tempfile
 from pathlib import Path
+from jinja2 import Template
 
 from app.main import MachineContextEngine
+from app.inputs.mock_fleet import BOILER_NAMES, generate_fleet
+from app.context.operator_query import resolve_query
+from app.context.suggest_engine import SuggestEngine
+from app.ui.nlp_templates import NLP_NARRATIVE_TEMPLATE
 
 
 class EngineStatus(BaseModel):
@@ -21,6 +25,12 @@ class EngineStatus(BaseModel):
 class ProcessRequest(BaseModel):
     """Request to process machine data."""
     machine_data_file: str
+
+
+class QueryRequest(BaseModel):
+    """Natural-language operator request."""
+    text: str
+    machine: str = "Boiler-01"
 
 
 def create_app(engine: MachineContextEngine) -> FastAPI:
@@ -38,6 +48,109 @@ def create_app(engine: MachineContextEngine) -> FastAPI:
         description="REST API for machine context analysis",
         version="1.0.0"
     )
+
+    fleet_collections = generate_fleet()
+    fleet_contexts = {
+        name: engine.process_collection(collection, name)
+        for name, collection in fleet_collections.items()
+    }
+    web_root = Path(__file__).resolve().parents[2] / "web"
+    suggest_engine = SuggestEngine()
+
+    def series_for(machine: str) -> dict[str, list[dict]]:
+        """Serialize the selected unit's actual rolling samples for graphing."""
+        grouped: dict[str, list[dict]] = {}
+        for reading in fleet_collections[machine].readings:
+            grouped.setdefault(reading.tag, []).append({
+                "timestamp": reading.timestamp.isoformat(),
+                "value": reading.value,
+                "unit": reading.unit or "",
+            })
+        return grouped
+
+    app.mount("/assets", StaticFiles(directory=web_root / "assets"), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    async def dashboard():
+        return FileResponse(web_root / "index.html")
+
+    @app.get("/api/fleet")
+    async def get_fleet():
+        return {
+            "units": [
+                {
+                    **fleet_contexts[name].model_dump(mode="json"),
+                    "series": series_for(name),
+                }
+                for name in BOILER_NAMES
+            ],
+            "names": list(BOILER_NAMES),
+        }
+
+    @app.get("/api/fleet/{machine}")
+    async def get_fleet_machine(machine: str):
+        context = fleet_contexts.get(machine)
+        if not context:
+            raise HTTPException(status_code=404, detail="Unknown boiler unit")
+        return {**context.model_dump(mode="json"), "series": series_for(machine)}
+
+    @app.post("/api/query")
+    async def operator_query(request: QueryRequest):
+        resolved = resolve_query(request.text, request.machine)
+        if resolved.machine == "ALL":
+            response = "\n".join(
+                f"{name}: {context.machine_state}, health {context.health_score:.0f}/100, "
+                f"{context.active_alarm_count} active alarm(s)"
+                for name, context in fleet_contexts.items()
+            )
+            return {"query": resolved.__dict__, "response": response}
+
+        context = fleet_contexts.get(resolved.machine)
+        if not context:
+            raise HTTPException(status_code=404, detail="Unknown boiler unit")
+        report_data = context.model_dump(mode="json")
+        if resolved.intent == "comprehensive":
+            response = Template(NLP_NARRATIVE_TEMPLATE).render(
+                **report_data, generated_at=context.timestamp.isoformat()
+            )
+        elif resolved.intent == "alarms":
+            response = f"{context.machine_name} has {context.active_alarm_count} active alarm(s). " \
+                + ("; ".join(a["message"] for a in context.active_alarms) or "No threshold violations are active.")
+        elif resolved.intent == "health":
+            response = f"{context.machine_name} is {context.health_status.lower()} at {context.health_score:.0f}/100. " \
+                + (" ".join(context.health_reasons) or "All monitored health factors are nominal.")
+        else:
+            metric_aliases = {
+                "temperature": "Temperature", "temp": "Temperature", "heat": "Temperature",
+                "pressure": "Pressure", "bar": "Pressure", "motor current": "MotorCurrent",
+                "current": "MotorCurrent", "amps": "MotorCurrent", "motor speed": "MotorSpeed",
+                "speed": "MotorSpeed", "rpm": "MotorSpeed", "vibration": "Vibration",
+                "machine status": "MachineStatus", "status": "MachineStatus", "state": "MachineStatus",
+            }
+            normalized_text = request.text.lower()
+            metric = next(
+                (tag for alias, tag in metric_aliases.items() if alias in normalized_text),
+                None,
+            )
+            if metric and metric in context.current_readings:
+                reading = context.current_readings[metric]
+                stats = context.statistics.get(metric, {})
+                response = (
+                    f"{context.machine_name} {metric}: {reading['value']} {reading.get('unit', '')}. "
+                    f"Trend: {reading.get('trend', 'UNKNOWN')}. "
+                    f"Observed range: {stats.get('min', 'n/a')} to {stats.get('max', 'n/a')}."
+                )
+            else:
+                response = f"{context.machine_name} status: {context.machine_state}."
+        return {"query": resolved.__dict__, "response": response, "context": report_data}
+
+    @app.get("/api/suggest")
+    async def suggest(query: str = ""):
+        """Return ranked autocomplete options for live operator search."""
+        return [
+            {"text": item.text, "category": item.category, "icon": item.icon, "display": item.display}
+            for item in suggest_engine.suggest(query)
+        ]
     
     @app.get("/health")
     async def health():

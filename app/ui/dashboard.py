@@ -12,6 +12,7 @@ from app.ui.readings_panel import ReadingsPanel
 from app.ui.nlp_templates import NLP_NARRATIVE_TEMPLATE
 from app.inputs.mock_fleet import BOILER_NAMES, generate_fleet
 from app.context.operator_query import resolve_query
+from app.context.suggest_engine import SuggestEngine, Suggestion
 
 
 class MCEDashboard:
@@ -40,6 +41,10 @@ class MCEDashboard:
         self.fleet_collections = {}
         self.boiler_selector = None
         self.notebook = None
+        self.suggest_engine = SuggestEngine()
+        self.suggestion_popup = None
+        self.suggestion_list = None
+        self.suggestions = []
 
         # Configure style
         self.setup_style()
@@ -100,7 +105,12 @@ class MCEDashboard:
         self.query_entry = ttk.Entry(header)
         self.query_entry.insert(0, "Ask about any boiler...")
         self.query_entry.grid(row=0, column=3, padx=(16, 4), sticky="ew")
-        self.query_entry.bind("<Return>", lambda _event: self.submit_query())
+        self.query_entry.bind("<KeyRelease>", self.on_query_key_release)
+        self.query_entry.bind("<Return>", self.on_query_return)
+        self.query_entry.bind("<Down>", self.on_suggestion_down)
+        self.query_entry.bind("<Up>", self.on_suggestion_up)
+        self.query_entry.bind("<Escape>", self.hide_suggestions)
+        self.query_entry.bind("<FocusOut>", lambda _event: self.root.after(120, self.hide_suggestions))
         ttk.Button(header, text="Query", command=self.submit_query).grid(row=0, column=4, padx=4)
         
         # Status
@@ -109,6 +119,80 @@ class MCEDashboard:
         
         # Load button
         header.columnconfigure(3, weight=1)
+
+    def on_query_key_release(self, _event=None):
+        """Refresh the borderless suggestion popup after each keystroke."""
+        text = self.query_entry.get().strip()
+        if not text or text == "Ask about any boiler...":
+            self.hide_suggestions()
+            return
+        self.suggestions = self.suggest_engine.suggest(text)
+        if not self.suggestions:
+            self.hide_suggestions()
+            return
+        if self.suggestion_popup is None or not self.suggestion_popup.winfo_exists():
+            self.suggestion_popup = tk.Toplevel(self.root)
+            self.suggestion_popup.overrideredirect(True)
+            self.suggestion_popup.configure(bg="#242424")
+            self.suggestion_list = tk.Listbox(
+                self.suggestion_popup, bg="#242424", fg="#ffffff", selectbackground="#0078d4",
+                selectforeground="#ffffff", relief=tk.FLAT, borderwidth=0, font=("Courier", 10),
+                activestyle="none", height=min(7, len(self.suggestions)), exportselection=False,
+            )
+            self.suggestion_list.pack(fill=tk.BOTH, expand=True)
+            self.suggestion_list.bind("<ButtonRelease-1>", self.on_suggestion_click)
+        self.suggestion_list.delete(0, tk.END)
+        for suggestion in self.suggestions:
+            self.suggestion_list.insert(tk.END, suggestion.display)
+        self.suggestion_list.configure(height=min(7, len(self.suggestions)))
+        self.suggestion_list.selection_clear(0, tk.END)
+        self.suggestion_popup.geometry(
+            f"{max(self.query_entry.winfo_width(), 360)}x{min(7, len(self.suggestions)) * 24}+"
+            f"{self.query_entry.winfo_rootx()}+{self.query_entry.winfo_rooty() + self.query_entry.winfo_height()}"
+        )
+        self.suggestion_popup.deiconify()
+
+    def on_suggestion_down(self, _event=None):
+        return self._move_suggestion(1)
+
+    def on_suggestion_up(self, _event=None):
+        return self._move_suggestion(-1)
+
+    def _move_suggestion(self, direction: int):
+        if not self.suggestion_list or not self.suggestions:
+            return "break"
+        current = self.suggestion_list.curselection()
+        index = (current[0] + direction) % len(self.suggestions) if current else (0 if direction > 0 else len(self.suggestions) - 1)
+        self.suggestion_list.selection_clear(0, tk.END)
+        self.suggestion_list.selection_set(index)
+        self.suggestion_list.activate(index)
+        return "break"
+
+    def on_suggestion_click(self, _event=None):
+        current = self.suggestion_list.curselection() if self.suggestion_list else ()
+        if current:
+            self.query_entry.delete(0, tk.END)
+            self.query_entry.insert(0, self.suggestions[current[0]].text)
+            self.hide_suggestions()
+            self.submit_query()
+        return "break"
+
+    def on_query_return(self, _event=None):
+        """Execute the highlighted suggestion, or the raw typed query."""
+        current = self.suggestion_list.curselection() if self.suggestion_list else ()
+        if current:
+            self.query_entry.delete(0, tk.END)
+            self.query_entry.insert(0, self.suggestions[current[0]].text)
+        self.hide_suggestions()
+        self.submit_query()
+        return "break"
+
+    def hide_suggestions(self, _event=None):
+        if self.suggestion_popup and self.suggestion_popup.winfo_exists():
+            self.suggestion_popup.destroy()
+        self.suggestion_popup = None
+        self.suggestion_list = None
+        return "break"
     
     def create_file_selector(self):
         """Create file selector section."""
@@ -173,6 +257,15 @@ class MCEDashboard:
     
     def create_main_layout(self):
         """Create main layout with tabs."""
+        self.hud_frame = tk.Frame(self.root, bg="#242424", highlightbackground="#0078d4", highlightthickness=1)
+        self.hud_frame.pack(fill=tk.X, padx=10, pady=(0, 8))
+        self.hud_label = tk.Label(
+            self.hud_frame, text="Operator search results will appear here.",
+            bg="#242424", fg="#d8f3dc", justify=tk.LEFT, anchor=tk.W,
+            font=("Courier", 10), padx=12, pady=8,
+        )
+        self.hud_label.pack(fill=tk.X)
+
         # Create notebook (tabs)
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -248,6 +341,34 @@ class MCEDashboard:
         self.response_label.delete("1.0", tk.END)
         self.response_label.insert(tk.END, report)
         self.response_label.config(state=tk.DISABLED)
+        self._update_search_hud(text)
+
+    def _update_search_hud(self, query_text: str) -> None:
+        """Render a compact metric badge, narrative, and warning state."""
+        metric_aliases = {
+            "temp": "Temperature", "temperature": "Temperature", "heat": "Temperature",
+            "pressure": "Pressure", "bar": "Pressure", "current": "MotorCurrent",
+            "amps": "MotorCurrent", "motor current": "MotorCurrent", "speed": "MotorSpeed",
+            "rpm": "MotorSpeed", "motor speed": "MotorSpeed", "vibration": "Vibration",
+            "status": "MachineStatus", "state": "MachineStatus",
+        }
+        normalized = query_text.lower()
+        metric = next((tag for alias, tag in metric_aliases.items() if alias in normalized), None)
+        warning = ""
+        if metric and metric in self.context.current_readings:
+            reading = self.context.current_readings[metric]
+            stats = self.context.statistics.get(metric, {})
+            warning = " | WARNING: active threshold alarm" if any(a.get("tag") == metric for a in self.context.active_alarms) else ""
+            headline = (
+                f"{metric}: {reading.get('value')} {reading.get('unit', '')}  |  "
+                f"range {stats.get('min', 'n/a')} - {stats.get('max', 'n/a')}  |  trend {reading.get('trend', 'UNKNOWN')}"
+            )
+            narrative = f"{self.context.machine_name} is {self.context.machine_state.lower()}; {metric} is currently {reading.get('trend', 'stable').lower()}."
+        else:
+            headline = f"{self.context.machine_name}: {self.context.machine_state} | health {self.context.health_score:.0f}/100"
+            narrative = self.context.summary
+            warning = " | WARNING: active alarms" if self.context.active_alarms else ""
+        self.hud_label.config(text=f"SEARCH RESULT  |  {headline}{warning}\n{narrative}", fg="#ffff00" if warning else "#d8f3dc")
         
     def load_data(self):
         """Load and process machine data."""

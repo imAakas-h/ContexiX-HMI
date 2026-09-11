@@ -13,18 +13,11 @@ if __name__ == "__main__":
         node_metadata_xml="BoilerModel2.NodeSet2 (1).xml"
     )
     
-    # Pre-process data
-    print("Pre-processing machine data...")
-    context = engine.process("machine_data_5min.json")
-    print(f"Context ready: {context.machine_state} | Health: {context.health_score:.0f}")
-    
     # Create app
     app = create_app(engine)
     
     # Run server
     print("\nStarting API server...")
-    print("Visit: http://localhost:8000/docs")
-    print("Health: http://localhost:8000/health")
-    print("Context: http://localhost:8000/context")
+    print("Visit: http://127.0.0.1:8000")
     
     uvicorn.run(app, host="127.0.0.1", port=8000)

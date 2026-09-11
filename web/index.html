@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ContexiX Plant Operations</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/suggestions.css">
+  <link rel="stylesheet" href="/assets/charts.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">CX</span><div><strong>ContexiX</strong><small>PLANT OPERATIONS</small></div></div>
+      <div class="connection"><span class="pulse"></span> LIVE TELEMETRY <span class="divider"></span> 10 MIN WINDOW</div>
+      <label class="unit-picker">UNIT <select id="unitSelect"></select></label>
+    </header>
+
+    <main>
+      <section class="query-strip">
+        <div class="query-copy"><span class="eyebrow">OPERATOR CONSOLE</span><h1>Keep the plant in view.</h1></div>
+        <form id="queryForm" class="query-form"><div class="search-box"><input id="queryInput" autocomplete="off" placeholder="Ask about any boiler..." aria-label="Ask about any boiler"><div id="suggestions" class="suggestions" hidden></div></div><button type="button" id="voiceButton" class="voice-button" title="Search by voice" aria-label="Search by voice">●</button><button type="submit">Query <span>↵</span></button></form>
+      </section>
+      <section id="response" class="response" hidden><div class="response-label">OPERATOR RESPONSE</div><pre id="responseText"></pre></section>
+
+      <section class="fleet-grid" id="fleetCards"></section>
+
+      <nav class="tabs" aria-label="Views">
+        <button class="tab active" data-view="readings">Current Readings</button>
+        <button class="tab" data-view="alarms">Alarm Timeline <b id="alarmBadge">0</b></button>
+        <button class="tab" data-view="health">Health Status</button>
+        <button class="tab" data-view="graphs">Real-Time Graphs</button>
+      </nav>
+      <section id="view" class="view"></section>
+    </main>
+    <footer><span>CONTEXT ENGINE ONLINE</span><span id="lastUpdated"></span></footer>
+  </div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

@@ -20,7 +20,7 @@ def resolve_query(text: str, default_machine: str = "Boiler-01") -> OperatorQuer
     else:
         match = re.search(r"(?:boiler|unit|machine)\s*[- ]?(0?[1-3])", normalized)
         if match:
-            machine = f"Boiler-0{match.group(1)}"
+            machine = f"Boiler-{int(match.group(1)):02d}"
         elif re.search(r"first\s+boiler|boiler\s+one", normalized):
             machine = "Boiler-01"
         elif re.search(r"second\s+boiler|boiler\s+two", normalized):

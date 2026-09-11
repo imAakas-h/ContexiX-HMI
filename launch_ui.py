@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Launch the Machine Context Engine Dashboard."""
-import sys
-import io
+"""Launch the browser-based operator dashboard."""
+import uvicorn
 
-# Fix Unicode on Windows
-if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-from app.ui.dashboard import run_dashboard
+from app.main import MachineContextEngine
+from app.api.routes import create_app
 
 
 if __name__ == "__main__":
-    run_dashboard()
+    engine = MachineContextEngine(
+        config_file="config.yaml",
+        node_metadata_json="nodesfile.json",
+        node_metadata_xml="BoilerModel2.NodeSet2 (1).xml",
+    )
+    uvicorn.run(create_app(engine), host="127.0.0.1", port=8000)

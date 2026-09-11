@@ -1,0 +1,52 @@
+const state={units:[],selected:'Boiler-01',view:'readings',suggestions:[],suggestionIndex:-1};
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function boot(){const data=await fetch('/api/fleet').then(r=>r.json());state.units=data.units;$('#unitSelect').innerHTML=data.names.map(n=>`<option>${n}</option>`).join('');renderCards();render();$('#lastUpdated').textContent=`UPDATED ${new Date().toLocaleTimeString()}`}
+function current(){return state.units.find(x=>x.machine_name===state.selected)||state.units[0]}
+function renderCards(){ $('#fleetCards').innerHTML=state.units.map(x=>`<article class="fleet-card ${x.machine_name===state.selected?'selected':''}" data-unit="${x.machine_name}"><div class="card-top"><span class="card-name">${x.machine_name}</span><span class="state ${x.machine_state}">${x.machine_state}</span></div><div class="card-score">${Math.round(x.health_score)}<small> / 100 HEALTH</small></div><div class="bar"><i style="width:${x.health_score}%"></i></div><div class="card-meta"><span>ALARMS <strong>${x.active_alarm_count}</strong></span><span>QUALITY <strong>${Math.round(x.communication_quality*100)}%</strong></span></div></article>`).join('');document.querySelectorAll('.fleet-card').forEach(c=>c.onclick=()=>selectUnit(c.dataset.unit))}
+function selectUnit(name){state.selected=name;$('#unitSelect').value=name;renderCards();render()}
+function render(){const c=current();$('#alarmBadge').textContent=c.active_alarm_count;const views={readings:readings,alarms:alarms,health:health,graphs:graphs};$('#view').innerHTML=views[state.view](c);document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===state.view))}
+function readings(c){return `<table class="reading-table"><thead><tr><th>TAG</th><th>VALUE</th><th>NORMAL LIMITS</th><th>TREND</th><th>QUALITY</th></tr></thead><tbody>${Object.entries(c.current_readings).map(([tag,r])=>`<tr><td>${tag}</td><td>${esc(r.value)} ${esc(r.unit)}</td><td>${limits[tag]||'Configured'}</td><td class="${r.trend==='INCREASING'?'trend-up':'trend-stable'}">${r.trend}</td><td>${r.quality}</td></tr>`).join('')}</tbody></table>`}
+const limits={Temperature:'5–85 °C',Pressure:'0.5–8 bar',MotorCurrent:'0–10 A',MotorSpeed:'0–2000 RPM',Vibration:'0–1 mm/s',MachineStatus:'IDLE / RUNNING'};
+function alarms(c){return c.active_alarms.length?c.active_alarms.map(a=>`<div class="alarm"><time>${new Date(a.timestamp).toLocaleTimeString()}</time><strong>${a.severity}</strong><span>${esc(a.tag)}: ${esc(a.message)}</span></div>`).join(''):'<div class="empty">No active alarms for this unit.</div>'}
+function health(c){return `<div class="health-layout"><div><div class="health-score">${Math.round(c.health_score)}<small>/100</small></div><span class="state ${c.health_status}">${c.health_status}</span></div><div><h3>Health factors</h3><ul class="list">${(c.health_reasons.length?c.health_reasons:['All monitored factors are nominal.']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><h3>Directional trends</h3><ul class="list">${Object.entries(c.trends).filter(([,v])=>v!=='UNKNOWN').map(([k,v])=>`<li>${k}: ${v}</li>`).join('')}</ul></div></div>`}
+function graphs(c){const series=c.series||{};const tags=Object.keys(series);return `<div class="chart-grid">${tags.map(tag=>chart(tag,series[tag],c.statistics[tag])).join('')}</div>`}
+function chart(tag,samples,stats){
+	const numeric=samples.every(s=>typeof s.value==='number');
+	const width=420,height=150,left=42,right=12,top=14,bottom=28,plotW=width-left-right,plotH=height-top-bottom;
+	const values=numeric?samples.map(s=>Number(s.value)):samples.map(s=>s.value);
+	const min=numeric?Math.min(...values):0,max=numeric?Math.max(...values):Math.max(1,new Set(values).size-1);
+	const span=max-min||1;
+	const y=value=>numeric?top+plotH-((Number(value)-min)/span)*plotH:top+plotH-(values.indexOf(value)/Math.max(1,new Set(values).size-1))*plotH;
+	const x=(_,i)=>left+(i/Math.max(1,samples.length-1))*plotW;
+	const points=numeric?samples.map((s,i)=>`${x(s,i).toFixed(1)},${y(s.value).toFixed(1)}`).join(' '):samples.map((s,i)=>`${x(s,i).toFixed(1)},${y(s.value).toFixed(1)}`).join(' ');
+	const labels=numeric?`<span>MIN ${min.toFixed(2)} ${esc(samples[0].unit)}</span><span>MAX ${max.toFixed(2)} ${esc(samples[0].unit)}</span>`:`<span>STATES ${[...new Set(values)].join(' / ')}</span>`;
+	const line=numeric?`<polyline points="${points}"/>`:`<polyline class="digital" points="${digitalPoints(samples,x,y)}"/>`;
+	return `<div class="chart"><div class="chart-head"><h3>${tag}</h3><span>${esc(String(samples[samples.length-1].value))} ${esc(samples[samples.length-1].unit)}</span></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${tag} 10 minute telemetry"><line class="axis" x1="${left}" y1="${top+plotH}" x2="${width-right}" y2="${top+plotH}"/><line class="axis" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}"/>${line}<text x="${left}" y="${height-8}">${timeLabel(samples[0].timestamp)}</text><text x="${width-right-42}" y="${height-8}">${timeLabel(samples[samples.length-1].timestamp)}</text></svg><div class="chart-meta">${labels}</div></div>`;
+}
+function digitalPoints(samples,x,y){let points=[];samples.forEach((s,i)=>{if(i){points.push(`${x(s,i).toFixed(1)},${y(samples[i-1].value).toFixed(1)}`)}points.push(`${x(s,i).toFixed(1)},${y(s.value).toFixed(1)}`)});return points.join(' ')}
+function timeLabel(timestamp){return new Date(timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{state.view=t.dataset.view;render()});$('#unitSelect').onchange=e=>selectUnit(e.target.value);$('#queryForm').onsubmit=async e=>{e.preventDefault();const text=$('#queryInput').value.trim();if(!text)return;const result=await fetch('/api/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,machine:state.selected})}).then(r=>r.json());if(result.query.machine!=='ALL')selectUnit(result.query.machine);$('#response').hidden=false;$('#responseText').textContent=result.response};
+const suggestionBox=$('#suggestions');const queryInput=$('#queryInput');
+const voiceButton=$('#voiceButton');
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null;
+let voiceTranscript='';
+let voiceSubmitted=false;
+let voiceStopTimer=null;
+let voiceRetryCount=0;
+let voiceRetryPending=false;
+if(SpeechRecognition){
+	recognition=new SpeechRecognition(); recognition.lang=navigator.language||'en-US'; recognition.interimResults=true; recognition.continuous=true; recognition.maxAlternatives=1; voiceButton.dataset.ready='true';
+	recognition.onstart=()=>{if(!voiceRetryPending){voiceTranscript='';voiceSubmitted=false;voiceRetryCount=0}voiceRetryPending=false;voiceButton.classList.add('listening');voiceButton.textContent='■';voiceButton.title='Stop listening';queryInput.placeholder='Listening... speak now';clearTimeout(voiceStopTimer);voiceStopTimer=setTimeout(()=>recognition.stop(),12000);};
+	recognition.onresult=e=>{voiceTranscript=Array.from(e.results).map(result=>result[0].transcript).join(' ').trim();queryInput.value=voiceTranscript;if(e.results[e.results.length-1].isFinal)submitVoiceQuery()};
+	recognition.onnomatch=()=>showVoiceStatus('Speech heard but not understood. Say a short command.');
+	recognition.onerror=e=>{const messages={"not-allowed":"Microphone blocked. Allow microphone access for this site.","service-not-allowed":"Browser speech service is blocked.","audio-capture":"No microphone was found.","network":"Speech service needs a network connection."};if(e.error==='no-speech'&&voiceRetryCount<2){voiceRetryCount+=1;voiceRetryPending=true;showVoiceStatus('Still listening. Speak clearly now.');return}showVoiceStatus(messages[e.error]||`Voice search error: ${e.error}`);};
+	recognition.onend=()=>{clearTimeout(voiceStopTimer);if(voiceRetryPending){try{recognition.start();return}catch(error){voiceRetryPending=false}}if(voiceTranscript&&!voiceSubmitted)submitVoiceQuery();voiceButton.classList.remove('listening');voiceButton.textContent='●';voiceButton.title='Search by voice';queryInput.placeholder='Ask about any boiler...';};
+	voiceButton.onclick=()=>{if(voiceButton.classList.contains('listening'))recognition.stop();else{try{recognition.start()}catch(error){showVoiceStatus('Voice search is already starting. Try again.')}}};
+}else{voiceButton.dataset.ready='false';voiceButton.onclick=()=>showVoiceStatus('Voice search requires Chrome or Edge.');voiceButton.disabled=false;}
+function submitVoiceQuery(){if(voiceSubmitted||!voiceTranscript)return;voiceSubmitted=true;hideSuggestions();$('#queryForm').requestSubmit();}
+function showVoiceStatus(message){let label=document.querySelector('.voice-status');if(!label){label=document.createElement('span');label.className='voice-status';document.querySelector('.search-box').appendChild(label)}label.textContent=message;window.setTimeout(()=>label.remove(),3500)}
+function renderSuggestions(){suggestionBox.innerHTML=state.suggestions.map((s,i)=>`<div class="suggestion ${i===state.suggestionIndex?'active':''}" data-index="${i}">${esc(s.display)}</div>`).join('');suggestionBox.hidden=!state.suggestions.length;document.querySelectorAll('.suggestion').forEach(x=>x.onclick=()=>{queryInput.value=state.suggestions[Number(x.dataset.index)].text;hideSuggestions();$('#queryForm').requestSubmit()})}
+function hideSuggestions(){state.suggestions=[];state.suggestionIndex=-1;suggestionBox.hidden=true}
+queryInput.oninput=async()=>{const q=queryInput.value.trim();if(!q){hideSuggestions();return}state.suggestions=await fetch(`/api/suggest?query=${encodeURIComponent(q)}`).then(r=>r.json());state.suggestionIndex=-1;renderSuggestions()};queryInput.onkeydown=e=>{if(e.key==='Escape'){hideSuggestions()}else if(e.key==='ArrowDown'&&state.suggestions.length){e.preventDefault();state.suggestionIndex=(state.suggestionIndex+1)%state.suggestions.length;renderSuggestions()}else if(e.key==='ArrowUp'&&state.suggestions.length){e.preventDefault();state.suggestionIndex=(state.suggestionIndex-1+state.suggestions.length)%state.suggestions.length;renderSuggestions()}else if(e.key==='Enter'&&state.suggestionIndex>=0){e.preventDefault();queryInput.value=state.suggestions[state.suggestionIndex].text;hideSuggestions();$('#queryForm').requestSubmit()}};document.addEventListener('click',e=>{if(!e.target.closest('.search-box'))hideSuggestions()});boot();
