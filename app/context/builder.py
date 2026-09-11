@@ -22,7 +22,8 @@ class ContextBuilder:
         alarm_engine: AlarmEngine = None,
         trend_engine: TrendEngine = None,
         anomaly_engine: AnomalyEngine = None,
-        health_engine: HealthEngine = None
+        health_engine: HealthEngine = None,
+        config: dict = None
     ):
         """
         Initialize context builder with engines.
@@ -36,14 +37,15 @@ class ContextBuilder:
             health_engine: HealthEngine (created if None)
         """
         self.node_registry = node_registry
-        self.state_engine = state_engine or MachineStateEngine()
-        self.alarm_engine = alarm_engine or AlarmEngine()
-        self.trend_engine = trend_engine or TrendEngine()
-        self.anomaly_engine = anomaly_engine or AnomalyEngine()
-        self.health_engine = health_engine or HealthEngine()
+        config = config or {}
+        self.state_engine = state_engine or MachineStateEngine(config.get("state"))
+        self.alarm_engine = alarm_engine or AlarmEngine(config.get("alarm"))
+        self.trend_engine = trend_engine or TrendEngine(config.get("trend"))
+        self.anomaly_engine = anomaly_engine or AnomalyEngine(config.get("anomaly"))
+        self.health_engine = health_engine or HealthEngine(config.get("health"))
         self.last_context = None
     
-    def build(self, collection: MachineDataCollection) -> MachineContext:
+    def build(self, collection: MachineDataCollection, machine_name: str = "Machine System") -> MachineContext:
         """
         Build complete machine context from collection.
         
@@ -89,7 +91,7 @@ class ContextBuilder:
         # Step 9: Build context
         context = MachineContext(
             timestamp=timestamp,
-            machine_name="Machine System",  # Can be set from config
+            machine_name=machine_name,
             machine_state=current_state,
             previous_state=self.state_engine.previous_state,
             state_duration_seconds=int(self.state_engine.get_state_duration().total_seconds()),

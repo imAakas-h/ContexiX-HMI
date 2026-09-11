@@ -22,6 +22,7 @@ class MachineReading(BaseModel):
     data_type: str = Field(default="Unknown", description="Data type of the value")
     quality: str = Field(default=QualityStatus.UNKNOWN, description="Quality status (GOOD, UNCERTAIN, BAD, UNKNOWN)")
     unit: Optional[str] = Field(None, description="Engineering unit")
+    boiler: Optional[str] = Field(None, description="Boiler identifier (e.g., 'Boiler1', 'Boiler2')")
     
     class Config:
         json_schema_extra = {
@@ -32,7 +33,8 @@ class MachineReading(BaseModel):
                 "value": 22.39,
                 "data_type": "float",
                 "quality": "GOOD",
-                "unit": "°C"
+                "unit": "°C",
+                "boiler": "Boiler1"
             }
         }
 

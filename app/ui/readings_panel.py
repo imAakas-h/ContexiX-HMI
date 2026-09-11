@@ -34,7 +34,7 @@ class ReadingsPanel(ttk.Frame):
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Treeview
-        tree = ttk.Treeview(tree_frame, columns=("Value", "Unit", "Trend", "Status"), 
+        tree = ttk.Treeview(tree_frame, columns=("Value", "Unit", "Limits", "Trend", "Status"),
                            height=20, yscrollcommand=scrollbar.set)
         scrollbar.config(command=tree.yview)
         
@@ -42,6 +42,7 @@ class ReadingsPanel(ttk.Frame):
         tree.column("#0", width=150, minwidth=150, anchor=tk.W)
         tree.column("Value", width=100, minwidth=100, anchor=tk.CENTER)
         tree.column("Unit", width=80, minwidth=80, anchor=tk.CENTER)
+        tree.column("Limits", width=130, minwidth=130, anchor=tk.CENTER)
         tree.column("Trend", width=100, minwidth=100, anchor=tk.CENTER)
         tree.column("Status", width=100, minwidth=100, anchor=tk.CENTER)
         
@@ -49,6 +50,7 @@ class ReadingsPanel(ttk.Frame):
         tree.heading("#0", text="Tag", anchor=tk.W)
         tree.heading("Value", text="Value", anchor=tk.CENTER)
         tree.heading("Unit", text="Unit", anchor=tk.CENTER)
+        tree.heading("Limits", text="Normal Limits", anchor=tk.CENTER)
         tree.heading("Trend", text="Trend", anchor=tk.CENTER)
         tree.heading("Status", text="Status", anchor=tk.CENTER)
         
@@ -58,6 +60,10 @@ class ReadingsPanel(ttk.Frame):
             unit = reading.get("unit", "")
             trend = reading.get("trend", "UNKNOWN")
             quality = reading.get("quality", "UNKNOWN")
+            limits = {
+                "Temperature": "5-85 °C", "Pressure": "0.5-8 bar", "MotorCurrent": "0-10 A",
+                "MotorSpeed": "0-2000 RPM", "Vibration": "0-1 mm/s", "MachineStatus": "IDLE/RUNNING",
+            }.get(tag, "Configured")
             
             # Format value
             if isinstance(value, float):
@@ -76,7 +82,7 @@ class ReadingsPanel(ttk.Frame):
                 trend_str = "? UNKNOWN"
             
             tree.insert("", tk.END, text=tag, 
-                       values=(value_str, unit, trend_str, quality))
+                       values=(value_str, unit, limits, trend_str, quality))
         
         tree.pack(fill=tk.BOTH, expand=True)
         

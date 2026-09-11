@@ -7,13 +7,13 @@ from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 from datetime import datetime
-import json
+from app.models.reading import MachineDataCollection
 
 
 class GraphPanel(ttk.Frame):
     """Panel displaying graphs for all machine variables."""
     
-    def __init__(self, parent, engine):
+    def __init__(self, parent, engine, collection: MachineDataCollection = None):
         """
         Initialize graph panel.
         
@@ -24,9 +24,7 @@ class GraphPanel(ttk.Frame):
         super().__init__(parent)
         self.engine = engine
         
-        # Load machine data for graphing
-        with open("machine_data_5min.json") as f:
-            self.machine_data = json.load(f)
+        self.collection = collection
         
         self.create_graphs()
     
@@ -38,8 +36,8 @@ class GraphPanel(ttk.Frame):
         
         # Get unique tags
         tags = set()
-        for reading in self.machine_data["data"]:
-            tags.add(reading["tag"])
+        for reading in self.collection.readings:
+            tags.add(reading.tag)
         
         tags = sorted(list(tags))
         
@@ -82,11 +80,11 @@ class GraphPanel(ttk.Frame):
         is_numeric = True
         unique_values = set()
         
-        for reading in self.machine_data["data"]:
-            if reading["tag"] == tag:
-                ts = datetime.fromisoformat(reading["timestamp"].replace('Z', '+00:00'))
+        for reading in self.collection.readings:
+            if reading.tag == tag:
+                ts = reading.timestamp
                 timestamps.append(ts)
-                val = reading["value"]
+                val = reading.value
                 values.append(val)
                 unique_values.add(str(val))
                 if not isinstance(val, (int, float)):

@@ -2,15 +2,16 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import datetime
-import json
 from pathlib import Path
-from jinja2 import Environment, Template
+from jinja2 import Template
 
 from app.main import MachineContextEngine
 from app.ui.graphs import GraphPanel
 from app.ui.alarm_panel import AlarmPanel
 from app.ui.readings_panel import ReadingsPanel
 from app.ui.nlp_templates import NLP_NARRATIVE_TEMPLATE
+from app.inputs.mock_fleet import BOILER_NAMES, generate_fleet
+from app.context.operator_query import resolve_query
 
 
 class MCEDashboard:
@@ -32,14 +33,22 @@ class MCEDashboard:
             'config': None
         }
         
+        # Multi-boiler support
+        self.available_boilers = []
+        self.selected_boiler = None
+        self.boiler_contexts = {}
+        self.fleet_collections = {}
+        self.boiler_selector = None
+        self.notebook = None
+
         # Configure style
         self.setup_style()
         
         # Create UI
         self.create_menu()
         self.create_header()
-        self.create_file_selector()
         self.create_main_layout()
+        self.root.after(100, self.load_fleet_data)
         
     def setup_style(self):
         """Setup ttk style."""
@@ -66,13 +75,6 @@ class MCEDashboard:
         
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Upload Machine Data", command=self.select_machine_data)
-        file_menu.add_command(label="Upload Node Metadata", command=self.select_node_metadata)
-        file_menu.add_command(label="Upload Node XML", command=self.select_node_xml)
-        file_menu.add_command(label="Upload Config", command=self.select_config)
-        file_menu.add_separator()
-        file_menu.add_command(label="Load & Process", command=self.load_data)
-        file_menu.add_separator()
         file_menu.add_command(label="Export NLP Summary", command=self.export_nlp_summary)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
@@ -86,17 +88,27 @@ class MCEDashboard:
         header = ttk.Frame(self.root)
         header.pack(fill=tk.X, padx=10, pady=10)
         
-        # Title
-        title_label = ttk.Label(header, text="⚙ MACHINE CONTEXT ENGINE", style='Header.TLabel')
-        title_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        title_label = ttk.Label(header, text="MACHINE CONTEXT ENGINE", style='Header.TLabel')
+        title_label.grid(row=0, column=0, padx=(0, 14), sticky="w")
+
+        ttk.Label(header, text="Unit").grid(row=0, column=1, padx=4)
+        self.boiler_selector = ttk.Combobox(header, values=BOILER_NAMES, state="readonly", width=14)
+        self.boiler_selector.set(BOILER_NAMES[0])
+        self.boiler_selector.bind("<<ComboboxSelected>>", self.on_boiler_selected)
+        self.boiler_selector.grid(row=0, column=2, padx=4)
+
+        self.query_entry = ttk.Entry(header)
+        self.query_entry.insert(0, "Ask about any boiler...")
+        self.query_entry.grid(row=0, column=3, padx=(16, 4), sticky="ew")
+        self.query_entry.bind("<Return>", lambda _event: self.submit_query())
+        ttk.Button(header, text="Query", command=self.submit_query).grid(row=0, column=4, padx=4)
         
         # Status
         self.status_label = ttk.Label(header, text="Status: Ready", style='Status.TLabel')
-        self.status_label.pack(side=tk.RIGHT)
+        self.status_label.grid(row=0, column=5, padx=(12, 0), sticky="e")
         
         # Load button
-        load_btn = ttk.Button(header, text="Load & Process", command=self.load_data)
-        load_btn.pack(side=tk.RIGHT, padx=5)
+        header.columnconfigure(3, weight=1)
     
     def create_file_selector(self):
         """Create file selector section."""
@@ -162,24 +174,80 @@ class MCEDashboard:
     def create_main_layout(self):
         """Create main layout with tabs."""
         # Create notebook (tabs)
-        notebook = ttk.Notebook(self.root)
-        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Tab 1: Graphs
-        self.graph_frame = ttk.Frame(notebook)
-        notebook.add(self.graph_frame, text="Real-Time Graphs")
+        self.graph_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.graph_frame, text="Real-Time Graphs")
         
         # Tab 2: Readings
-        self.readings_frame = ttk.Frame(notebook)
-        notebook.add(self.readings_frame, text="Current Readings")
+        self.readings_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.readings_frame, text="Current Readings")
         
         # Tab 3: Alarms
-        self.alarm_frame = ttk.Frame(notebook)
-        notebook.add(self.alarm_frame, text="Alarm Timeline")
+        self.alarm_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.alarm_frame, text="Alarm Timeline")
         
         # Tab 4: Health
-        self.health_frame = ttk.Frame(notebook)
-        notebook.add(self.health_frame, text="Health Status")
+        self.health_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.health_frame, text="Health Status")
+
+        self.response_label = tk.Text(self.root, height=5, wrap=tk.WORD, bg="#242424", fg="#d8f3dc", relief=tk.FLAT)
+        self.response_label.pack(fill=tk.X, padx=10, pady=(0, 8))
+        self.response_label.insert(tk.END, "Operator response: Fleet telemetry is loading...")
+        self.response_label.config(state=tk.DISABLED)
+
+    def load_fleet_data(self):
+        """Load standalone telemetry and build context for each boiler."""
+        self.status_label.config(text="Status: Connecting to plant telemetry...")
+        self.fleet_collections = generate_fleet()
+        self.engine = MachineContextEngine(config_file="config.yaml", node_metadata_json="nodesfile.json", node_metadata_xml="BoilerModel2.NodeSet2 (1).xml")
+        self.boiler_contexts = {
+            name: self.engine.process_collection(collection, name)
+            for name, collection in self.fleet_collections.items()
+        }
+        self.selected_boiler = self.boiler_selector.get()
+        self.context = self.boiler_contexts[self.selected_boiler]
+        self.alarm_timeline = self._extract_alarm_timeline()
+        self.update_all_tabs()
+        self.status_label.config(text="Status: Plant telemetry online")
+
+    def on_boiler_selected(self, _event=None):
+        """Refresh every view when the operator changes unit."""
+        selected = self.boiler_selector.get()
+        if selected in self.boiler_contexts:
+            self.selected_boiler = selected
+            self.context = self.boiler_contexts[selected]
+            self.alarm_timeline = self._extract_alarm_timeline()
+            self.update_all_tabs()
+
+    def submit_query(self):
+        """Resolve a query, synchronize the UI, and show the shift narrative."""
+        text = self.query_entry.get().strip()
+        if not text or text == "Ask about any boiler..." or not self.boiler_contexts:
+            return
+        query = resolve_query(text, self.selected_boiler or BOILER_NAMES[0])
+        if query.machine != "ALL":
+            self.boiler_selector.set(query.machine)
+            self.on_boiler_selected()
+        if query.intent == "alarms":
+            self.notebook.select(self.alarm_frame)
+        elif query.intent == "health":
+            self.notebook.select(self.health_frame)
+        elif query.intent == "telemetry":
+            self.notebook.select(self.readings_frame)
+        report = self._generate_nlp_summary()
+        if query.machine == "ALL":
+            report = "PLANT FLEET SNAPSHOT\n\n" + "\n".join(
+                f"{name}: {context.machine_state}, health {context.health_score:.0f}/100, "
+                f"{context.active_alarm_count} active alarm(s)"
+                for name, context in self.boiler_contexts.items()
+            )
+        self.response_label.config(state=tk.NORMAL)
+        self.response_label.delete("1.0", tk.END)
+        self.response_label.insert(tk.END, report)
+        self.response_label.config(state=tk.DISABLED)
         
     def load_data(self):
         """Load and process machine data."""
@@ -237,7 +305,7 @@ class MCEDashboard:
         if not self.context:
             return
         
-        graph_panel = GraphPanel(self.graph_frame, self.engine)
+        graph_panel = GraphPanel(self.graph_frame, self.engine, self.fleet_collections.get(self.selected_boiler))
         graph_panel.pack(fill=tk.BOTH, expand=True)
     
     def update_readings_tab(self):
@@ -309,6 +377,11 @@ class MCEDashboard:
         
         # Anomalies
         ttk.Label(container, text=f"Anomalies Detected: {len(self.context.anomalies)}", font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(20, 10))
+
+        ttk.Label(container, text="Directional Trends:", font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(20, 10))
+        for tag, trend in self.context.trends.items():
+            if trend != "UNKNOWN":
+                ttk.Label(container, text=f"  {tag}: {trend}", font=('Arial', 10)).pack(anchor=tk.W)
     
     def _extract_alarm_timeline(self) -> list:
         """Extract alarm timeline."""

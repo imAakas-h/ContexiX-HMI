@@ -62,7 +62,7 @@ class MachineContextEngine:
         self.resolver = NodeResolver(self.node_registry)
         
         # Initialize context builder with engines
-        self.context_builder = ContextBuilder(self.node_registry)
+        self.context_builder = ContextBuilder(self.node_registry, config=self.config.get("engines", {}))
         
         # Initialize LLM context generator
         self.llm_generator = LLMContextGenerator()
@@ -91,8 +91,16 @@ class MachineContextEngine:
         print(f"Node resolution coverage: {validation['coverage']:.1%}")
         
         # Step 4: Build context
-        context = self.context_builder.build(collection)
+        context = self.context_builder.build(collection, self.config.get("machine", {}).get("name", "Machine System"))
         
+        self.last_context = context
+        return context
+
+    def process_collection(self, collection: MachineDataCollection, machine_name: str) -> MachineContext:
+        """Resolve and evaluate an in-memory collection for one machine."""
+        collection = self.resolver.resolve_collection(collection)
+        builder = ContextBuilder(self.node_registry, config=self.config.get("engines", {}))
+        context = builder.build(collection, machine_name)
         self.last_context = context
         return context
     

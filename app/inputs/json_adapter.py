@@ -67,7 +67,8 @@ class JSONDataAdapter(DataAdapter):
                 value=raw_reading.get("value"),
                 data_type=raw_reading.get("datatype", "Unknown").capitalize(),
                 quality=quality,
-                unit=None  # Will be enriched from metadata
+                unit=None,  # Will be enriched from metadata
+                boiler=raw_reading.get("boiler")  # Support boiler field from multi-boiler data
             )
         except Exception as e:
             print(f"Error parsing reading: {e}")
